@@ -1,0 +1,73 @@
+CONTRACTWEKKER SETUP INSTRUCTIES
+===================================
+
+1. DATABASE SETUP
+-----------------
+- Importeer database.sql in je MySQL database
+- Dit creëert de database 'contractwekker' met alle benodigde tabellen
+- De products tabel wordt automatisch gevuld met standaard contracttypes
+
+2. CONFIGURATIE
+---------------
+Optie A - .env bestand:
+- Kopieer .env.example naar .env
+- Pas de waardes aan voor jouw omgeving
+
+Optie B - env.php bestand:
+- Kopieer env.php.example naar env.php  
+- Pas de waardes aan voor jouw omgeving
+
+Minimale configuratie:
+- DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD
+
+Optionele SMTP configuratie:
+- SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
+- Als niet ingesteld, wordt PHP mail() gebruikt
+
+3. CRONJOB INSTELLEN
+-------------------
+Voeg deze regel toe aan je crontab om elke minuut te checken voor te versturen emails:
+
+* * * * * /usr/bin/php /pad/naar/contractwekker/cronjob.php
+
+Om crontab te bewerken:
+crontab -e
+
+4. WEBSERVER CONFIGURATIE
+-------------------------
+- Upload alle bestanden naar je webserver
+- Zorg dat de webserver schrijfrechten heeft voor error logging
+- Test de applicatie door index.html te openen
+
+5. TESTEN
+---------
+1. Open index.html in je browser
+2. Vul een testformulier in
+3. Check de database of de entry is toegevoegd
+4. Test de cronjob handmatig: php cronjob.php
+5. Test de afmeldlink
+
+6. BEVEILIGING
+--------------
+- Zorg dat .env en env.php niet toegankelijk zijn via de browser
+- Gebruik HTTPS in productie
+- Update BASE_URL in je configuratie
+- Houd je database credentials veilig
+
+7. TROUBLESHOOTING
+------------------
+- Check PHP error logs voor problemen
+- Zorg dat PDO MySQL extensie geïnstalleerd is
+- Test database connectie in config.php
+- Voor SMTP problemen, check je email provider instellingen
+
+BESTANDSSTRUCTUUR:
+- index.html: Hoofdformulier
+- register.php: Verwerkt formulier submissions
+- get_products.php: API voor contracttypes
+- success.php: Bevestigingspagina
+- cronjob.php: Verstuur emails (via cron)
+- unsubscribe.php: Afmeld functionaliteit
+- config.php: Configuratie en database functies
+- email.php: Email service klasse
+- database.sql: Database schema

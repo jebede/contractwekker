@@ -1,0 +1,20 @@
+Soms komt het label toch naast de input nog steeds ipv erboven. Fix   │
+│   dit. Maak verder een basis expo app in de map expo-app. Moet precies  │
+│   hetzelfde doen. Laad producten in via een api.php . Nu via:           │
+│   http://contractwekker.test/api.php , later via                        │
+│   https://www.contractwekker.nl/api.php . Evt. bijv bij eas productie   │
+│   (volgens mij kun je hier ook eas variabelen voor gebruiken, toch?).   │
+│   Gebruik verder expo-notifications en maak een nieuwe tabel            │
+│   push_alerts met een expo push_token, product_id, etc. Bij submit kun  │
+│   je ook je email leeglaten en ipv een pushmelding krijgen. Vraag pas   │
+│   om permissie bij het versturen van het formulier. Ik heb verder       │
+│   icon-cw-1024.png bijgevoegd voor het gebruik als 1024x1024 etc app    │
+│   icoon. Maak ook een cronjob_push.php die push notificaties via Expo   │
+│   verstuurt. Zorg dat ze max 1x verzonden worden, tenzij anders         │
+│   vermeld. Maak ook een instellingen tab waar je jouw push              │
+│   notificaties kunt zien (op basis van jouw push_token) en eventueel    │
+│   kunt verwijderen. De push_token moet dus een index zijn. Kun je       │
+│   anders de email_alerts + push_alerts samenvoegen in één tabel zodat   │
+│   bij verwijderen van push_alert de email_alert ook verwijderd wordt?   │
+│   Noem het bijvoorbeeld gewoon alerts waarbij óf de push_token óf de    │
+│   email in ieder geval gevuld dient te zijn. Gebruik Typescript en Expo router met de laatste expo versie.

@@ -1,0 +1,25 @@
+Kun je een contractwekker bouwen?
+
+Bouw in html + php + MySQL. Geef het een strakke en simpele layout.
+
+Het bestaat uit een scherm:
+
+- Keuze soort contract: energie, autoverzekering, zorgverzekering, reisverzekering, overlijdensrisicoverzekering (verzin andere producten), eigen naam opgeven - de soorten contracten halen we uit een "products" tabel.
+- Geef een seintje over: 1 maand, 3 maanden, 1 jaar, anders (geef op)
+- Keuze uit periodiek aan of uit (standaard aan): Elke 1 maand, 3 maanden, 1 jaar (pas naam aan, a.d.v. selectie hierboven)
+- Emailadres (gekoppeld aan een email_alerts tabel)
+- Voeg een onzichtbare honeypot erbij
+
+Geef mooi uitziende UI/UX elementen om dit vorm te geven.
+
+Na registreren, is er een mail cronjob die elke minuut checkt of er notificaties mogen worden verstuurd per email.
+
+Deze mail heeft info over het $product. Bijv: Jouw contractwekker voor $product->name! Hoi $naam, je hebt een tijdje geleden een contractwekker ingesteld voor $product->name. Deze is nu afgegaan! Je vindt nieuwe $product->name hier. (pas aan in eigen woorden om het informeel, maar activerend te maken)
+
+Het linkt met een CTA knop naar: $product->deeplink . Als de alert niet periodiek is, stel ook nog een link eronder met: "je ontvangt dit bericht eenmalig". Wil je het toch vaker instellen? Dan kan dat hier met de setting.
+
+En natuurlijk ook een afmeld link voor de periodieke email_alerts.
+
+Verstuur per email via smtp. Gebruik deze uit een env.php bestand of .env . 
+
+Gebruik simpele PHP zonder composer, Laravel, etc. om het simpel te houden, maar gebruik wel alle common-practices voor veiligheid.
