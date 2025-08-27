@@ -18,7 +18,9 @@ CREATE TABLE alerts (
     product_id INT NULL,
     custom_product_name VARCHAR(255) NULL,
     alert_period ENUM('1_month', '3_months', '1_year', '2_years', '3_years', 'custom') NOT NULL,
+    -- Migration: add first_alert_date after alert_period
     first_alert_date DATE NULL,
+    -- Migration: rename alert_date to next_alert_date (so just define next_alert_date here)
     next_alert_date DATE NULL,
     end_date DATE NULL,
     is_periodic BOOLEAN DEFAULT TRUE,
@@ -28,6 +30,7 @@ CREATE TABLE alerts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    -- Migration: update indexes
     INDEX idx_next_alert_date (next_alert_date),
     INDEX idx_first_alert_date (first_alert_date),
     INDEX idx_email (email),
