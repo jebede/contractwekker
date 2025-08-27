@@ -261,7 +261,7 @@
 
                 <div class="form-group">
                     <label for="email">E-mailadres</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" required placeholder="Bijv. jouwnaam@gmail.com">
                 </div>
 
                 <div class="honeypot">
@@ -280,6 +280,20 @@
         const periodicCheckbox = document.getElementById('is_periodic');
         const periodicText = document.getElementById('periodicText');
         const productSelect = document.getElementById('product');
+        const emailInput = document.getElementById('email');
+        
+        // Load saved email from session storage on page load
+        const savedEmail = sessionStorage.getItem('contractwekker_email');
+        if (savedEmail) {
+            emailInput.value = savedEmail;
+        }
+        
+        // Save email to session storage when user types
+        emailInput.addEventListener('input', function() {
+            if (this.value) {
+                sessionStorage.setItem('contractwekker_email', this.value);
+            }
+        });
 
         // Load products
         fetch('get_products.php')

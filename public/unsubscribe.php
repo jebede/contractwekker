@@ -13,10 +13,10 @@ if (empty($token)) {
         
         // Find the alert by token
         $stmt = $pdo->prepare("
-            SELECT ea.*, p.name as product_name 
-            FROM email_alerts ea 
-            JOIN products p ON ea.product_id = p.id 
-            WHERE ea.unsubscribe_token = ? AND ea.is_active = 1
+            SELECT a.*, p.name as product_name 
+            FROM alerts a 
+            LEFT JOIN products p ON a.product_id = p.id 
+            WHERE a.unsubscribe_token = ? AND a.is_active = 1
         ");
         $stmt->execute([$token]);
         $alert = $stmt->fetch();
@@ -26,7 +26,7 @@ if (empty($token)) {
         } else {
             // Deactivate the alert
             $updateStmt = $pdo->prepare("
-                UPDATE email_alerts 
+                UPDATE alerts 
                 SET is_active = 0, updated_at = NOW() 
                 WHERE unsubscribe_token = ?
             ");
@@ -146,7 +146,7 @@ if (empty($token)) {
                 <h1>Succesvol afgemeld</h1>
                 <p>
                     Je bent succesvol afgemeld voor contractherinneringen voor 
-                    <span class="product-name"><?= htmlspecialchars($alert['product_name'], ENT_QUOTES, 'UTF-8') ?></span>.
+                    <span class="product-name"><?= htmlspecialchars($alert['product_name'] ?: $alert['custom_product_name'], ENT_QUOTES, 'UTF-8') ?></span>.
                 </p>
                 <p>Je ontvangt geen verdere e-mails meer voor dit contract.</p>
                 <a href="index.html" class="btn">Nieuwe wekker instellen</a>

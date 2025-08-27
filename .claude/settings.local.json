@@ -3,7 +3,9 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(npx create-expo-app:*)"
+      "Bash(npx create-expo-app:*)",
+      "Bash(npm install:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []

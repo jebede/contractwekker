@@ -17,12 +17,12 @@ try {
     
     // Find alerts that need to be sent
     $stmt = $pdo->prepare("
-        SELECT ea.*, p.name as product_name, p.deeplink 
-        FROM email_alerts ea 
-        JOIN products p ON ea.product_id = p.id 
-        WHERE ea.is_active = 1 
-        AND ea.next_alert_date <= NOW() 
-        ORDER BY ea.next_alert_date ASC 
+        SELECT a.*, p.name as product_name, p.deeplink 
+        FROM alerts a 
+        LEFT JOIN products p ON a.product_id = p.id 
+        WHERE a.is_active = 1 
+        AND a.next_alert_date <= NOW() 
+        ORDER BY a.next_alert_date ASC 
         LIMIT 50
     ");
     
@@ -36,8 +36,8 @@ try {
         try {
             // Prepare product data
             $product = [
-                'name' => $alert['product_name'],
-                'deeplink' => $alert['deeplink']
+                'name' => $alert['product_name'] ?: $alert['custom_product_name'],
+                'deeplink' => $alert['deeplink'] ?: '#'
             ];
             
             // Send email
@@ -51,13 +51,14 @@ try {
                     // Calculate next alert date
                     $nextAlertDate = calculateNextAlertDate(
                         $alert['alert_period'], 
-                        $alert['custom_period'], 
-                        $alert['custom_period_unit']
+                        null, 
+                        null,
+                        $alert['end_date']
                     );
                     
                     // Update next alert date
                     $updateStmt = $pdo->prepare("
-                        UPDATE email_alerts 
+                        UPDATE alerts 
                         SET next_alert_date = ?, updated_at = NOW() 
                         WHERE id = ?
                     ");
@@ -67,7 +68,7 @@ try {
                 } else {
                     // Deactivate one-time alert
                     $updateStmt = $pdo->prepare("
-                        UPDATE email_alerts 
+                        UPDATE alerts 
                         SET is_active = 0, updated_at = NOW() 
                         WHERE id = ?
                     ");

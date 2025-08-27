@@ -77,26 +77,32 @@ if (!empty($errors)) {
 try {
     $pdo = Config::getDatabaseConnection();
     
-    // Check if product exists (only for non-custom products)
+    // Check if product exists and get product name (only for non-custom products)
+    $productName = null;
     if ($productId !== null) {
-        $stmt = $pdo->prepare("SELECT id FROM products WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, name FROM products WHERE id = ?");
         $stmt->execute([$productId]);
-        if (!$stmt->fetch()) {
+        $product = $stmt->fetch();
+        if (!$product) {
             throw new Exception("Product niet gevonden");
         }
+        $productName = $product['name'];
+    } else {
+        $productName = $customProductName;
     }
     
-    // Calculate next alert date
-    $nextAlertDate = calculateNextAlertDate($alertPeriod, null, null, $endDate);
+    // Calculate alert dates
+    $firstAlertDate = calculateNextAlertDate($alertPeriod, null, null, $endDate);
+    $nextAlertDate = $firstAlertDate;
     
     // Generate unsubscribe token
     $unsubscribeToken = generateToken();
     
     // Insert email alert
     $stmt = $pdo->prepare("
-        INSERT INTO email_alerts 
-        (email, product_id, custom_product_name, alert_period, end_date, is_periodic, next_alert_date, unsubscribe_token) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO alerts 
+        (email, product_id, custom_product_name, alert_period, end_date, is_periodic, first_alert_date, next_alert_date, unsubscribe_token) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -106,11 +112,12 @@ try {
         $alertPeriod,
         $endDate,
         $isPeriodic ? 1 : 0,
+        $firstAlertDate,
         $nextAlertDate,
         $unsubscribeToken
     ]);
     
-    $_SESSION['success'] = 'Contractwekker succesvol ingesteld! Je ontvangt binnenkort een bevestiging per e-mail.';
+    $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.';
     header('Location: success.php');
     
 } catch (Exception $e) {

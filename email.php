@@ -55,7 +55,7 @@ class EmailService {
                 </div>
                 
                 <div style='padding: 30px;'>
-                    <h2 style='color: #333; font-size: 24px; margin: 0 0 20px 0;'>Hoi " . htmlspecialchars($alert['name'], ENT_QUOTES, 'UTF-8') . "! 👋</h2>
+                    <h2 style='color: #333; font-size: 24px; margin: 0 0 20px 0;'>Hoi! 👋</h2>
                     
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Je hebt een tijdje geleden een contractwekker ingesteld voor <strong>{$product['name']}</strong>. 
