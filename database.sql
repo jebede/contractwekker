@@ -41,14 +41,14 @@ CREATE TABLE alerts (
 
 -- Insert default products
 INSERT INTO products (name, deeplink) VALUES
-('⚡ Energie', 'https://www.vergelijk.nl/energie'),
-('🚗 Autoverzekering', 'https://www.vergelijk.nl/autoverzekering'),
-('🏥 Zorgverzekering', 'https://www.vergelijk.nl/zorgverzekering'),
-('✈️ Reisverzekering', 'https://www.vergelijk.nl/reisverzekering'),
-('💼 Overlijdensrisicoverzekering', 'https://www.vergelijk.nl/overlijdensrisicoverzekering'),
-('🏠 Hypotheek', 'https://www.vergelijk.nl/hypotheek'),
-('🌐 Internetprovider', 'https://www.vergelijk.nl/internet'),
-('📱 Mobiele abonnement', 'https://www.vergelijk.nl/mobiel'),
-('🏠 Inboedelverzekering', 'https://www.vergelijk.nl/inboedelverzekering'),
-('⚖️ Rechtsbijstandverzekering', 'https://www.vergelijk.nl/rechtsbijstand'),
+('⚡ Energie', 'https://echt-groene-stroom.nl'),
+('🚗 Autoverzekering', 'https://bdt9.net/c/?si=18644&li=1802449&wi=297149&ws=contractwekker&dl=autoverzekering%2Fautoverzekering-vergelijken%2F'),
+('🏥 Zorgverzekering', 'https://www.awin1.com/cread.php?awinmid=8558&awinaffid=329963&clickref=contractwekker'),
+('✈️ Reisverzekering', 'https://bdt9.net/c/?si=18644&li=1802449&wi=297149&ws=contractwekker&dl=verzekeringen%2Freisverzekering%2Freisverzekering-vergelijken%2F'),
+('💼 Overlijdensrisicoverzekering', 'https://www.shopsdatabase.com/open/4466?category='),
+('🏠 Hypotheek', 'https://www.shopsdatabase.com/open/4252?category='),
+('🌐 Internetprovider', 'https://bdt9.net/c/?si=18647&li=1802770&wi=297149&ws=contractwekker'),
+('📱 Mobiele abonnement', 'https://www.awin1.com/cread.php?awinmid=8373&awinaffid=329963&clickref=contractwekker'),
+('🏠 Inboedelverzekering', 'https://bdt9.net/c/?si=18644&li=1802449&wi=297149&ws=contractwekker&dl=verzekeringen%2Fwoonverzekering%2Fwoonverzekering-vergelijken%2F'),
+('⚖️ Rechtsbijstandverzekering', 'https://www.pricewise.nl/verzekeringen/rechtsbijstandverzekering/'),
 ('Anders', '#');
