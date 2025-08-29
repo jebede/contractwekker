@@ -273,7 +273,7 @@ runTest("Periodic push alerts reset is_sent and update next_alert_date", functio
 echo "\n" . YELLOW . "Testing Web Access:" . NC . "\n";
 
 runTest("Homepage (/) is accessible", function() {
-    $homepagePath = dirname(__DIR__) . '/public/index.html';
+    $homepagePath = dirname(__DIR__) . '/public/index.php';
     return file_exists($homepagePath);
 });
 
