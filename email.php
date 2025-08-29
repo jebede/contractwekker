@@ -6,6 +6,7 @@ class EmailService {
     private $smtpPort;
     private $smtpUsername;
     private $smtpPassword;
+    private $smtpSecure;
     private $fromEmail;
     private $fromName;
     
@@ -14,6 +15,7 @@ class EmailService {
         $this->smtpPort = Config::get('SMTP_PORT', 587);
         $this->smtpUsername = Config::get('SMTP_USERNAME', '');
         $this->smtpPassword = Config::get('SMTP_PASSWORD', '');
+        $this->smtpSecure = strtolower(Config::get('SMTP_SECURE', ''));
         $this->fromEmail = Config::get('FROM_EMAIL', 'noreply@contractwekker.nl');
         $this->fromName = Config::get('FROM_NAME', 'Contractwekker');
     }
@@ -118,44 +120,88 @@ class EmailService {
     }
     
     private function sendSMTP($to, $subject, $message, $headers) {
-        // Basic SMTP implementation
-        $socket = fsockopen($this->smtpHost, $this->smtpPort, $errno, $errstr, 30);
+        // Determine connection type based on SMTP_SECURE setting
+        $connectionString = $this->smtpHost;
+        
+        // Handle SSL connection (usually port 465)
+        if ($this->smtpSecure === 'ssl') {
+            $connectionString = 'ssl://' . $this->smtpHost;
+        }
+        
+        // Connect to SMTP server
+        $socket = fsockopen($connectionString, $this->smtpPort, $errno, $errstr, 30);
         
         if (!$socket) {
             error_log("SMTP connection failed: $errno - $errstr");
             return false;
         }
         
-        $commands = [
-            "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost'),
-            "STARTTLS",
-            "AUTH LOGIN",
-            base64_encode($this->smtpUsername),
-            base64_encode($this->smtpPassword),
-            "MAIL FROM: <{$this->fromEmail}>",
-            "RCPT TO: <{$to}>",
-            "DATA",
-            "Subject: {$subject}\r\n" . implode("\r\n", $headers) . "\r\n\r\n{$message}\r\n.",
-            "QUIT"
-        ];
+        // Read initial server response
+        $response = fgets($socket, 256);
         
+        // Build command list based on security settings
+        $commands = [];
+        $commands[] = "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        
+        // Handle TLS (STARTTLS) - typically for port 587
+        if ($this->smtpSecure === 'tls') {
+            $commands[] = "STARTTLS";
+        }
+        
+        // Add authentication if credentials are provided
+        if (!empty($this->smtpUsername) && !empty($this->smtpPassword)) {
+            $commands[] = "AUTH LOGIN";
+            $commands[] = base64_encode($this->smtpUsername);
+            $commands[] = base64_encode($this->smtpPassword);
+        }
+        
+        // Add email commands
+        $commands[] = "MAIL FROM: <{$this->fromEmail}>";
+        $commands[] = "RCPT TO: <{$to}>";
+        $commands[] = "DATA";
+        
+        // Send commands
         foreach ($commands as $command) {
-            if ($command === "STARTTLS" && $this->smtpPort == 587) {
+            // Handle STARTTLS command
+            if ($command === "STARTTLS") {
                 fwrite($socket, "$command\r\n");
                 $response = fgets($socket, 256);
-                if (substr($response, 0, 3) != '220') continue;
                 
-                stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                if (substr($response, 0, 3) == '220') {
+                    // Enable TLS encryption
+                    stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                    // Send EHLO again after STARTTLS
+                    fwrite($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
+                    $response = fgets($socket, 256);
+                }
                 continue;
             }
             
             fwrite($socket, "$command\r\n");
-            $response = fgets($socket, 256);
             
+            // Read response (multi-line for EHLO)
+            if (strpos($command, 'EHLO') === 0) {
+                do {
+                    $response = fgets($socket, 256);
+                } while (substr($response, 3, 1) == '-');
+            } else {
+                $response = fgets($socket, 256);
+            }
+            
+            // Send email data after DATA command
             if ($command === "DATA") {
-                $response = fgets($socket, 256); // Read the data response
+                if (substr($response, 0, 3) == '354') {
+                    // Send email headers and body
+                    $emailData = "Subject: {$subject}\r\n" . implode("\r\n", $headers) . "\r\n\r\n{$message}\r\n.";
+                    fwrite($socket, "$emailData\r\n");
+                    $response = fgets($socket, 256);
+                }
             }
         }
+        
+        // Send QUIT command
+        fwrite($socket, "QUIT\r\n");
+        $response = fgets($socket, 256);
         
         fclose($socket);
         return true;
