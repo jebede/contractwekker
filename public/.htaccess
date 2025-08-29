@@ -1,4 +1,7 @@
 RewriteEngine On
+# Redirect www to non-www for contractwekker.nl
+RewriteCond %{HTTP_HOST} ^www\.contractwekker\.nl$ [NC]
+RewriteRule ^(.*)$ https://contractwekker.nl/$1 [R=301,L]
 
 # Security Headers
 <IfModule mod_headers.c>
