@@ -1,15 +1,5 @@
 RewriteEngine On
 
-# Force HTTPS and www in one step to avoid redirect loops
-RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTP_HOST} ^(www\.)?([^.]+\.[^.]+)$ [NC]
-RewriteRule ^(.*)$ https://www.%2/$1 [R=301,L]
-
-# Alternatively, to force non-www (redirect www to non-www), comment out the above two rules and uncomment these:
-# RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-# RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
-
 # Security Headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
