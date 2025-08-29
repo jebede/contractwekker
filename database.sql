@@ -1,6 +1,6 @@
 -- Contractwekker Database Schema
-CREATE DATABASE IF NOT EXISTS contractwekker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE contractwekker;
+-- Set character set for current database
+ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Products table for contract types
 CREATE TABLE products (
