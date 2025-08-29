@@ -132,7 +132,7 @@ switch($action) {
                 // Get alerts by push token - don't expose email addresses
                 $stmt = $pdo->prepare("
                     SELECT a.id, a.product_id, a.custom_product_name, a.alert_period, a.first_alert_date, 
-                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name
+                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name, p.deeplink
                     FROM alerts a 
                     LEFT JOIN products p ON a.product_id = p.id 
                     WHERE a.push_token = ? 
@@ -143,7 +143,7 @@ switch($action) {
                 // Get alerts by email - don't expose email addresses
                 $stmt = $pdo->prepare("
                     SELECT a.id, a.product_id, a.custom_product_name, a.alert_period, a.first_alert_date, 
-                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name
+                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name, p.deeplink
                     FROM alerts a 
                     LEFT JOIN products p ON a.product_id = p.id 
                     WHERE a.email = ? 
