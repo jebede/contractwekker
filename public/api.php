@@ -48,6 +48,18 @@ switch($action) {
         $is_periodic = $input['is_periodic'] ?? 0;
         $email = $input['email'] ?? null;
         $push_token = $input['push_token'] ?? null;
+        $send_early_reminder = $input['send_early_reminder'] ?? false;
+        $early_reminder_days = $input['early_reminder_days'] ?? 60;
+        
+        // Validate early reminder days
+        if ($send_early_reminder) {
+            $early_reminder_days = filter_var($early_reminder_days, FILTER_VALIDATE_INT);
+            if ($early_reminder_days === false || $early_reminder_days < 1 || $early_reminder_days > 365) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Early reminder days must be between 1 and 365']);
+                exit;
+            }
+        }
         
         // Validate required fields
         if (!$product_id || !$alert_period) {
@@ -67,6 +79,7 @@ switch($action) {
             // Calculate alert dates
             $first_alert_date = null;
             $next_alert_date = null;
+            $early_reminder_date = null;
             
             if ($alert_period === 'custom' && $end_date) {
                 $first_alert_date = date('Y-m-d', strtotime($end_date . ' -1 month'));
@@ -91,10 +104,15 @@ switch($action) {
                 exit;
             }
             
+            // Calculate early reminder date if enabled
+            if ($send_early_reminder && $early_reminder_days > 0) {
+                $early_reminder_date = date('Y-m-d', strtotime($next_alert_date . ' -' . $early_reminder_days . ' days'));
+            }
+            
             // Generate unsubscribe token
             $unsubscribe_token = bin2hex(random_bytes(32));
             
-            $stmt = $pdo->prepare("INSERT INTO alerts (product_id, custom_product_name, alert_period, first_alert_date, next_alert_date, is_periodic, email, push_token, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt = $pdo->prepare("INSERT INTO alerts (product_id, custom_product_name, alert_period, first_alert_date, next_alert_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, email, push_token, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             
             $params = [
                 $product_id === 'other' ? null : $product_id,
@@ -103,6 +121,9 @@ switch($action) {
                 $first_alert_date,
                 $next_alert_date,
                 $is_periodic,
+                $send_early_reminder ? 1 : 0,
+                $early_reminder_days,
+                $early_reminder_date,
                 $email,
                 $push_token,
                 $unsubscribe_token
@@ -132,7 +153,8 @@ switch($action) {
                 // Get alerts by push token - don't expose email addresses
                 $stmt = $pdo->prepare("
                     SELECT a.id, a.product_id, a.custom_product_name, a.alert_period, a.first_alert_date, 
-                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name, p.deeplink
+                           a.next_alert_date, a.is_periodic, a.send_early_reminder, a.early_reminder_days,
+                           a.early_reminder_date, a.created_at, p.name as product_name, p.deeplink
                     FROM alerts a 
                     LEFT JOIN products p ON a.product_id = p.id 
                     WHERE a.push_token = ? 
@@ -143,7 +165,8 @@ switch($action) {
                 // Get alerts by email - don't expose email addresses
                 $stmt = $pdo->prepare("
                     SELECT a.id, a.product_id, a.custom_product_name, a.alert_period, a.first_alert_date, 
-                           a.next_alert_date, a.is_periodic, a.created_at, p.name as product_name, p.deeplink
+                           a.next_alert_date, a.is_periodic, a.send_early_reminder, a.early_reminder_days,
+                           a.early_reminder_date, a.created_at, p.name as product_name, p.deeplink
                     FROM alerts a 
                     LEFT JOIN products p ON a.product_id = p.id 
                     WHERE a.email = ? 

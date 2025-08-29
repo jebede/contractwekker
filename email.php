@@ -20,17 +20,21 @@ class EmailService {
         $this->fromName = Config::get('FROM_NAME', 'Contractwekker');
     }
     
-    public function sendContractAlert($alert, $product) {
-        $subject = "🔔 Contractwekker voor {$product['name']} - Het is tijd!";
+    public function sendContractAlert($alert, $product, $isEarlyReminder = false) {
+        if ($isEarlyReminder) {
+            $subject = "⏰ Vroege herinnering: {$product['name']} - nog {$alert['early_reminder_days']} dagen!";
+        } else {
+            $subject = "🔔 Contractwekker voor {$product['name']} - Het is tijd!";
+        }
         
-        $message = $this->buildAlertEmailBody($alert, $product);
+        $message = $this->buildAlertEmailBody($alert, $product, $isEarlyReminder);
         
         return $this->sendEmail($alert['email'], $subject, $message);
     }
     
-    private function buildAlertEmailBody($alert, $product) {
-        $unsubscribeUrl = Config::get('BASE_URL', 'http://localhost') . "/unsubscribe.php?token=" . urlencode($alert['unsubscribe_token']);
-        $settingsUrl = Config::get('BASE_URL', 'http://localhost') . "/index.html";
+    private function buildAlertEmailBody($alert, $product, $isEarlyReminder = false) {
+        $unsubscribeUrl = Config::get('BASE_URL', 'https://contractwekker.nl') . "/unsubscribe.php?token=" . urlencode($alert['unsubscribe_token']);
+        $settingsUrl = Config::get('BASE_URL', 'https://contractwekker.nl') . "/";
         
         $periodicText = '';
         if (!$alert['is_periodic']) {
@@ -58,7 +62,21 @@ class EmailService {
                 
                 <div style='padding: 30px;'>
                     <h2 style='color: #333; font-size: 24px; margin: 0 0 20px 0;'>Hoi! 👋</h2>
+                    ";
+        
+        if ($isEarlyReminder) {
+            $html .= "
+                    <p style='font-size: 16px; margin: 20px 0;'>
+                        Dit is een <strong>vroege herinnering</strong> voor je <strong>{$product['name']}</strong> contract. 
+                        Je hoofdherinnering volgt over <strong>{$alert['early_reminder_days']} dagen</strong>. ⏰
+                    </p>
                     
+                    <p style='font-size: 16px; margin: 20px 0;'>
+                        Nu is het perfecte moment om alvast te oriënteren op nieuwe opties en te vergelijken. 
+                        Zo ben je goed voorbereid wanneer het tijd is om over te stappen! 💡
+                    </p>";
+        } else {
+            $html .= "
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Je hebt een tijdje geleden een contractwekker ingesteld voor <strong>{$product['name']}</strong>. 
                         Deze is nu afgegaan! ⏰
@@ -67,7 +85,10 @@ class EmailService {
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Het is tijd om je contract te bekijken en eventueel over te stappen naar een betere deal. 
                         Vergelijk de nieuwste opties en bespaar geld! 💰
-                    </p>
+                    </p>";
+        }
+        
+        $html .= "
                     
                     <div style='text-align: center; margin: 30px 0;'>
                         <a href='{$product['deeplink']}' 

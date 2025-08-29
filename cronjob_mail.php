@@ -15,13 +15,26 @@ try {
     $pdo = Config::getDatabaseConnection();
     $emailService = new EmailService();
     
-    // Find alerts that need to be sent
+    // Find alerts that need to be sent (including early reminders)
     $stmt = $pdo->prepare("
-        SELECT a.*, p.name as product_name, p.deeplink 
+        SELECT a.*, p.name as product_name, p.deeplink,
+               CASE 
+                   WHEN a.send_early_reminder = 1 
+                        AND a.early_reminder_date <= CURDATE() 
+                        AND a.early_reminder_sent = 0 
+                   THEN 'early'
+                   WHEN a.next_alert_date <= CURDATE() 
+                   THEN 'regular'
+                   ELSE NULL
+               END as reminder_type
         FROM alerts a 
         LEFT JOIN products p ON a.product_id = p.id 
         WHERE a.is_active = 1 
-        AND a.next_alert_date <= NOW() 
+        AND a.email IS NOT NULL
+        AND (
+            (a.send_early_reminder = 1 AND a.early_reminder_date <= CURDATE() AND a.early_reminder_sent = 0)
+            OR (a.next_alert_date <= CURDATE())
+        )
         ORDER BY a.next_alert_date ASC 
         LIMIT 50
     ");
@@ -40,44 +53,68 @@ try {
                 'deeplink' => $alert['deeplink'] ?: '#'
             ];
             
-            // Send email
-            $sent = $emailService->sendContractAlert($alert, $product);
+            // Check if this is an early reminder
+            $isEarlyReminder = ($alert['reminder_type'] === 'early');
+            
+            // Send email with appropriate message
+            $sent = $emailService->sendContractAlert($alert, $product, $isEarlyReminder);
             
             if ($sent) {
                 $sentCount++;
                 
-                // Update alert based on periodic setting
-                if ($alert['is_periodic']) {
-                    // Calculate next alert date
-                    $nextAlertDate = calculateNextAlertDate(
-                        $alert['alert_period'], 
-                        null, 
-                        null,
-                        $alert['end_date']
-                    );
-                    
-                    // Update next alert date
+                if ($isEarlyReminder) {
+                    // Mark early reminder as sent
                     $updateStmt = $pdo->prepare("
                         UPDATE alerts 
-                        SET next_alert_date = ?, updated_at = NOW() 
-                        WHERE id = ?
-                    ");
-                    $updateStmt->execute([$nextAlertDate, $alert['id']]);
-                    
-                    echo "Updated periodic alert {$alert['id']} for {$alert['email']} - next: {$nextAlertDate}\n";
-                } else {
-                    // Deactivate one-time alert
-                    $updateStmt = $pdo->prepare("
-                        UPDATE alerts 
-                        SET is_active = 0, updated_at = NOW() 
+                        SET early_reminder_sent = 1, updated_at = NOW() 
                         WHERE id = ?
                     ");
                     $updateStmt->execute([$alert['id']]);
                     
-                    echo "Deactivated one-time alert {$alert['id']} for {$alert['email']}\n";
+                    echo "Sent early reminder to {$alert['email']} for {$product['name']} ({$alert['early_reminder_days']} days before main reminder)\n";
+                } else {
+                    // Handle regular reminder
+                    if ($alert['is_periodic']) {
+                        // Calculate next alert date
+                        $nextAlertDate = calculateNextAlertDate(
+                            $alert['alert_period'], 
+                            null, 
+                            null,
+                            $alert['end_date']
+                        );
+                        
+                        // Calculate new early reminder date if enabled
+                        $earlyReminderDate = null;
+                        if ($alert['send_early_reminder'] && $alert['early_reminder_days'] > 0) {
+                            $earlyReminderDate = date('Y-m-d', strtotime($nextAlertDate . ' -' . $alert['early_reminder_days'] . ' days'));
+                        }
+                        
+                        // Update next alert date and reset early reminder
+                        $updateStmt = $pdo->prepare("
+                            UPDATE alerts 
+                            SET next_alert_date = ?, 
+                                early_reminder_date = ?,
+                                early_reminder_sent = 0,
+                                updated_at = NOW() 
+                            WHERE id = ?
+                        ");
+                        $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $alert['id']]);
+                        
+                        echo "Updated periodic alert {$alert['id']} for {$alert['email']} - next: {$nextAlertDate}\n";
+                    } else {
+                        // Deactivate one-time alert
+                        $updateStmt = $pdo->prepare("
+                            UPDATE alerts 
+                            SET is_active = 0, updated_at = NOW() 
+                            WHERE id = ?
+                        ");
+                        $updateStmt->execute([$alert['id']]);
+                        
+                        echo "Deactivated one-time alert {$alert['id']} for {$alert['email']}\n";
+                    }
+                    
+                    echo "Sent regular alert to {$alert['email']} for {$product['name']}\n";
                 }
-                
-                echo "Sent alert to {$alert['email']} for {$product['name']}\n";
                 
             } else {
                 $errorCount++;

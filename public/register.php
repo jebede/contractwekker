@@ -67,6 +67,21 @@ if ($alertPeriod === 'custom') {
 
 $isPeriodic = isset($_POST['is_periodic']) && $_POST['is_periodic'] === '1';
 
+// Early reminder is now enabled by default (opt-out instead of opt-in)
+$disableEarlyReminder = isset($_POST['disable_early_reminder']) && $_POST['disable_early_reminder'] === '1';
+$sendEarlyReminder = !$disableEarlyReminder; // Enabled by default unless user opts out
+
+// Validate early reminder days
+$earlyReminderDays = 60; // Default
+if (isset($_POST['early_reminder_days'])) {
+    $inputDays = filter_var($_POST['early_reminder_days'], FILTER_VALIDATE_INT);
+    if ($inputDays !== false && $inputDays >= 1 && $inputDays <= 365) {
+        $earlyReminderDays = $inputDays;
+    } else {
+        $errors[] = 'Aantal dagen moet tussen 1 en 365 zijn';
+    }
+}
+
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['form_data'] = $_POST;
@@ -95,14 +110,20 @@ try {
     $firstAlertDate = calculateNextAlertDate($alertPeriod, null, null, $endDate);
     $nextAlertDate = $firstAlertDate;
     
+    // Calculate early reminder date if enabled
+    $earlyReminderDate = null;
+    if ($sendEarlyReminder && $earlyReminderDays > 0) {
+        $earlyReminderDate = date('Y-m-d', strtotime($nextAlertDate . ' -' . $earlyReminderDays . ' days'));
+    }
+    
     // Generate unsubscribe token
     $unsubscribeToken = generateToken();
     
     // Insert email alert
     $stmt = $pdo->prepare("
         INSERT INTO alerts 
-        (email, product_id, custom_product_name, alert_period, end_date, is_periodic, first_alert_date, next_alert_date, unsubscribe_token) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (email, product_id, custom_product_name, alert_period, end_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, first_alert_date, next_alert_date, unsubscribe_token) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -112,12 +133,15 @@ try {
         $alertPeriod,
         $endDate,
         $isPeriodic ? 1 : 0,
+        $sendEarlyReminder ? 1 : 0,
+        $earlyReminderDays,
+        $earlyReminderDate,
         $firstAlertDate,
         $nextAlertDate,
         $unsubscribeToken
     ]);
     
-    $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.';
+    $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.<br><br><strong>Let op:</strong> We doen ons best om ervoor te zorgen dat je tijdig bericht ontvangt, maar het kan voorkomen dat een e-mail niet aankomt (bijv. door spamfilters). Voeg daarom ook noreply@contractwekker.nl toe aan je contacten. Houd daarnaast zelf altijd je contracten in de gaten als extra zekerheid.';
     header('Location: success.php');
     
 } catch (Exception $e) {

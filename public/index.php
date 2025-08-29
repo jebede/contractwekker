@@ -45,16 +45,20 @@ include 'views/header.php';
         </div>
 
         <div class="form-group">
-            <div class="checkbox-group">
-                <input type="checkbox" id="is_periodic" name="is_periodic" value="1" checked>
-                <div>
-                    <label for="is_periodic">Periodiek herhalen</label>
-                    <div class="periodic-text" id="periodicText">
-                        Stuur elke 1 jaar een herinnering
-                    </div>
+            <div class="summary-box">
+                <div class="summary-text" id="summaryText">
+                    We sturen je elk jaar een contractwekker. Je ontvangt 60 dagen van tevoren een extra herinnering.
                 </div>
+                <button type="button" class="edit-button" onclick="openSettingsModal()">
+                    ✏️ Wijzig
+                </button>
             </div>
         </div>
+
+        <!-- Hidden inputs for form submission -->
+        <input type="hidden" id="is_periodic" name="is_periodic" value="1">
+        <input type="hidden" id="disable_early_reminder" name="disable_early_reminder" value="">
+        <input type="hidden" id="early_reminder_days" name="early_reminder_days" value="60">
 
         <div class="form-group">
             <label for="email">E-mailadres</label>
@@ -71,12 +75,112 @@ include 'views/header.php';
     </form>
 </div>
 
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3>Instellingen aanpassen</h3>
+        
+        <div class="modal-section">
+            <h4>Herhaling</h4>
+            <div class="modal-option" data-option="periodic" data-value="true">
+                <span>Periodiek herhalen</span>
+            </div>
+            <div class="modal-option" data-option="periodic" data-value="false">
+                <span>Eenmalig</span>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <h4>Vroege herinnering</h4>
+            <div class="modal-option" data-option="early" data-value="true">
+                <span>Stuur vroege herinnering</span>
+            </div>
+            <div class="modal-option" data-option="early" data-value="false">
+                <span>Geen vroege herinnering</span>
+            </div>
+            
+            <div id="daysInputSection" style="margin-top: 15px;">
+                <label for="modalEarlyDays">Aantal dagen van tevoren:</label>
+                <div class="days-input-wrapper">
+                    <input type="number" id="modalEarlyDays" value="60" min="1" max="365">
+                    <span>dagen</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button type="button" class="modal-button secondary" onclick="closeSettingsModal()">
+                Annuleer
+            </button>
+            <button type="button" class="modal-button primary" onclick="saveSettings()">
+                Opslaan
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     const alertPeriodSelect = document.getElementById('alert_period');
     const periodicCheckbox = document.getElementById('is_periodic');
-    const periodicText = document.getElementById('periodicText');
     const productSelect = document.getElementById('product');
     const emailInput = document.getElementById('email');
+    const disableEarlyReminderCheckbox = document.getElementById('disable_early_reminder');
+    const earlyReminderDaysInput = document.getElementById('early_reminder_days');
+    
+    let currentSettings = {
+        isPeriodic: true,
+        sendEarlyReminder: true,
+        earlyReminderDays: 60
+    };
+    
+    function getSummaryText(alertPeriod, isPeriodic, sendEarlyReminder, earlyReminderDays) {
+        let frequency = '';
+        
+        if (isPeriodic) {
+            switch (alertPeriod) {
+                case '1_month':
+                    frequency = 'elke maand';
+                    break;
+                case '3_months':
+                    frequency = 'elke 3 maanden';
+                    break;
+                case '1_year':
+                    frequency = 'elk jaar';
+                    break;
+                case '2_years':
+                    frequency = 'elke 2 jaar';
+                    break;
+                case '3_years':
+                    frequency = 'elke 3 jaar';
+                    break;
+                case 'custom':
+                    frequency = 'eenmalig op de einddatum';
+                    break;
+                default:
+                    frequency = 'elk jaar';
+            }
+        } else {
+            frequency = 'eenmalig';
+        }
+
+        let earlyText = '';
+        if (sendEarlyReminder) {
+            earlyText = ` Je ontvangt ${earlyReminderDays} dagen van tevoren een extra herinnering.`;
+        }
+
+        return `We sturen je ${frequency} een contractwekker.${earlyText}`;
+    }
+    
+    function updateSummaryText() {
+        const summaryElement = document.getElementById('summaryText');
+        const alertPeriod = alertPeriodSelect.value;
+        summaryElement.textContent = getSummaryText(
+            alertPeriod, 
+            currentSettings.isPeriodic, 
+            currentSettings.sendEarlyReminder, 
+            currentSettings.earlyReminderDays
+        );
+    }
     
     // Load saved email from session storage on page load
     const savedEmail = sessionStorage.getItem('contractwekker_email');
@@ -91,6 +195,9 @@ include 'views/header.php';
         }
     });
 
+    // Initialize summary text
+    updateSummaryText();
+    
     // Load products
     fetch('get_products.php')
         .then(response => response.json())
@@ -127,9 +234,12 @@ include 'views/header.php';
             contractEndDateDiv.classList.remove('show');
         }
         updatePeriodicText();
+        
+        // Update summary text immediately when period changes
+        updateSummaryText();
     });
 
-    // Update periodic text based on selected period
+    // Update periodic text based on selected period (legacy - kept for compatibility)
     function updatePeriodicText() {
         const period = alertPeriodSelect.value;
         let text = '';
@@ -148,9 +258,97 @@ include 'views/header.php';
             text = 'Stuur 1 maand voor einddatum een herinnering';
         }
         
-        periodicText.textContent = text;
+        // Only update if periodicText element exists (for backward compatibility)
+        if (window.periodicText) {
+            periodicText.textContent = text;
+        }
     }
 
+    // Modal functions
+    function openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        modal.style.display = 'flex';
+        
+        // Update modal with current settings
+        updateModalSelections();
+    }
+    
+    function closeSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        modal.style.display = 'none';
+    }
+    
+    function updateModalSelections() {
+        // Update periodic options
+        const periodicOptions = document.querySelectorAll('[data-option="periodic"]');
+        periodicOptions.forEach(option => {
+            const isSelected = (option.dataset.value === 'true') === currentSettings.isPeriodic;
+            option.classList.toggle('selected', isSelected);
+        });
+        
+        // Update early reminder options
+        const earlyOptions = document.querySelectorAll('[data-option="early"]');
+        earlyOptions.forEach(option => {
+            const isSelected = (option.dataset.value === 'true') === currentSettings.sendEarlyReminder;
+            option.classList.toggle('selected', isSelected);
+        });
+        
+        // Update days input
+        const modalDaysInput = document.getElementById('modalEarlyDays');
+        modalDaysInput.value = currentSettings.earlyReminderDays;
+        
+        // Show/hide days input section
+        const daysSection = document.getElementById('daysInputSection');
+        daysSection.style.display = currentSettings.sendEarlyReminder ? 'block' : 'none';
+    }
+    
+    function saveSettings() {
+        // Update form inputs
+        periodicCheckbox.value = currentSettings.isPeriodic ? '1' : '';
+        disableEarlyReminderCheckbox.value = currentSettings.sendEarlyReminder ? '' : '1';
+        earlyReminderDaysInput.value = currentSettings.earlyReminderDays;
+        
+        // Update summary text
+        updateSummaryText();
+        
+        // Close modal
+        closeSettingsModal();
+    }
+    
+    // Handle modal option clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.modal-option')) {
+            const option = e.target.closest('.modal-option');
+            const optionType = option.dataset.option;
+            const value = option.dataset.value === 'true';
+            
+            if (optionType === 'periodic') {
+                currentSettings.isPeriodic = value;
+            } else if (optionType === 'early') {
+                currentSettings.sendEarlyReminder = value;
+                // Show/hide days input
+                const daysSection = document.getElementById('daysInputSection');
+                daysSection.style.display = value ? 'block' : 'none';
+            }
+            
+            updateModalSelections();
+        }
+    });
+    
+    // Handle days input change
+    document.getElementById('modalEarlyDays').addEventListener('input', function(e) {
+        const days = parseInt(e.target.value) || 60;
+        if (days >= 1 && days <= 365) {
+            currentSettings.earlyReminderDays = days;
+        }
+    });
+    
+    // Close modal on overlay click
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSettingsModal();
+        }
+    });
 
     // Form validation
     document.getElementById('contractForm').addEventListener('submit', function(e) {

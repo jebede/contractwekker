@@ -1,2 +1,1 @@
-- Privacy policy (Vimexx + Mailgun + Netcup)
 - Security check

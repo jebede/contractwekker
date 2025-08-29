@@ -59,17 +59,29 @@ try {
     $today = date('Y-m-d');
     $stmt = $pdo->prepare("
         SELECT a.id, a.push_token, a.custom_product_name, a.alert_period, a.is_periodic, 
-               a.first_alert_date, a.next_alert_date, p.name as product_name, p.deeplink
+               a.first_alert_date, a.next_alert_date, a.send_early_reminder, a.early_reminder_days,
+               a.early_reminder_date, a.early_reminder_sent, p.name as product_name, p.deeplink,
+               CASE 
+                   WHEN a.send_early_reminder = 1 
+                        AND a.early_reminder_date = ?
+                        AND a.early_reminder_sent = 0 
+                   THEN 'early'
+                   WHEN a.next_alert_date = ?
+                   THEN 'regular'
+                   ELSE NULL
+               END as reminder_type
         FROM alerts a 
         LEFT JOIN products p ON a.product_id = p.id 
         WHERE a.push_token IS NOT NULL 
           AND a.is_active = 1 
-          AND a.is_sent = 0
-          AND a.next_alert_date = ?
+          AND (
+              (a.send_early_reminder = 1 AND a.early_reminder_date = ? AND a.early_reminder_sent = 0)
+              OR (a.next_alert_date = ? AND a.is_sent = 0)
+          )
         ORDER BY a.id
     ");
     
-    $stmt->execute([$today]);
+    $stmt->execute([$today, $today, $today, $today]);
     $alerts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($alerts)) {
@@ -98,8 +110,14 @@ try {
                 // Single alert
                 $alert = $userAlerts[0];
                 $productName = $alert['custom_product_name'] ?: $alert['product_name'];
-                $title = "⏰ Contractwekker";
-                $body = "Je contract '{$productName}' loopt binnenkort af. Tijd om over te stappen!";
+                $isEarlyReminder = ($alert['reminder_type'] === 'early');
+                if ($isEarlyReminder) {
+                    $title = "⏰ Vroege herinnering";
+                    $body = "Je contract '{$productName}' - nog {$alert['early_reminder_days']} dagen tot hoofdherinnering";
+                } else {
+                    $title = "⏰ Contractwekker";
+                    $body = "Je contract '{$productName}' loopt binnenkort af. Tijd om over te stappen!";
+                }
                 $deeplink = $alert['deeplink'] ?: 'https://www.contractwekker.nl';
                 
                 $sent = sendExpoPushNotifications(
@@ -122,17 +140,23 @@ try {
             }
             
             if ($sent) {
-                // Mark alerts as sent
-                $alertIds = array_column($userAlerts, 'id');
-                $placeholders = str_repeat('?,', count($alertIds) - 1) . '?';
-                $updateStmt = $pdo->prepare("UPDATE alerts SET is_sent = 1 WHERE id IN ($placeholders)");
-                $updateStmt->execute($alertIds);
-                
                 $successCount += count($userAlerts);
                 
-                // Handle periodic alerts
+                // Handle alerts based on reminder type
                 foreach ($userAlerts as $alert) {
-                    if ($alert['is_periodic']) {
+                    $isEarlyReminder = ($alert['reminder_type'] === 'early');
+                    
+                    if ($isEarlyReminder) {
+                        // Mark early reminder as sent
+                        $updateStmt = $pdo->prepare("UPDATE alerts SET early_reminder_sent = 1, updated_at = NOW() WHERE id = ?");
+                        $updateStmt->execute([$alert['id']]);
+                        echo "Sent early reminder for alert ID {$alert['id']}\n";
+                    } else {
+                        // Mark regular alert as sent
+                        $updateStmt = $pdo->prepare("UPDATE alerts SET is_sent = 1, updated_at = NOW() WHERE id = ?");
+                        $updateStmt->execute([$alert['id']]);
+                        
+                        if ($alert['is_periodic']) {
                         $nextAlertDate = null;
                         $alertPeriod = $alert['alert_period'];
                         
@@ -158,15 +182,26 @@ try {
                                 break;
                         }
                         
-                        if ($nextAlertDate) {
-                            // Update the next alert date for recurring alerts
-                            $updateStmt = $pdo->prepare("
-                                UPDATE alerts 
-                                SET next_alert_date = ?, is_sent = 0, updated_at = NOW() 
-                                WHERE id = ?
-                            ");
-                            $updateStmt->execute([$nextAlertDate, $alert['id']]);
-                            echo "Updated recurring alert ID {$alert['id']}, next date: $nextAlertDate\n";
+                            if ($nextAlertDate) {
+                                // Calculate new early reminder date if enabled
+                                $earlyReminderDate = null;
+                                if ($alert['send_early_reminder'] && $alert['early_reminder_days'] > 0) {
+                                    $earlyReminderDate = date('Y-m-d', strtotime($nextAlertDate . ' -' . $alert['early_reminder_days'] . ' days'));
+                                }
+                                
+                                // Update the next alert date for recurring alerts
+                                $updateStmt = $pdo->prepare("
+                                    UPDATE alerts 
+                                    SET next_alert_date = ?, 
+                                        early_reminder_date = ?,
+                                        early_reminder_sent = 0,
+                                        is_sent = 0, 
+                                        updated_at = NOW() 
+                                    WHERE id = ?
+                                ");
+                                $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $alert['id']]);
+                                echo "Updated recurring alert ID {$alert['id']}, next date: $nextAlertDate\n";
+                            }
                         }
                     }
                 }

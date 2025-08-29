@@ -24,6 +24,10 @@ CREATE TABLE alerts (
     next_alert_date DATE NULL,
     end_date DATE NULL,
     is_periodic BOOLEAN DEFAULT TRUE,
+    send_early_reminder BOOLEAN DEFAULT FALSE,
+    early_reminder_days INT DEFAULT 60,
+    early_reminder_sent BOOLEAN DEFAULT FALSE,
+    early_reminder_date DATE NULL,
     is_active BOOLEAN DEFAULT TRUE,
     is_sent BOOLEAN DEFAULT FALSE,
     unsubscribe_token VARCHAR(255) UNIQUE NOT NULL,
@@ -33,6 +37,7 @@ CREATE TABLE alerts (
     -- Migration: update indexes
     INDEX idx_next_alert_date (next_alert_date),
     INDEX idx_first_alert_date (first_alert_date),
+    INDEX idx_early_reminder_date (early_reminder_date),
     INDEX idx_email (email),
     INDEX idx_push_token (push_token),
     INDEX idx_unsubscribe_token (unsubscribe_token),

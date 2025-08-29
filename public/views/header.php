@@ -145,6 +145,190 @@
             margin-top: 5px;
         }
 
+        .service-info-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border: 2px solid #e1e5f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .service-info-box p {
+            margin-bottom: 10px;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border: 2px solid #e1e5f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .summary-text {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .edit-button {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .edit-button:hover {
+            background: #3d8bfe;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            margin: 0 0 25px 0;
+            text-align: center;
+            font-size: 1.4rem;
+            color: #333;
+        }
+
+        .modal-section {
+            margin-bottom: 25px;
+        }
+
+        .modal-section h4 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .modal-option {
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-option:hover {
+            background: #e9ecef;
+        }
+
+        .modal-option.selected {
+            background: #e6f3ff;
+            border-color: #4facfe;
+        }
+
+        .modal-option.selected span {
+            color: #4facfe;
+            font-weight: 600;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button.primary {
+            background: #4facfe;
+            color: white;
+        }
+
+        .modal-button.primary:hover {
+            background: #3d8bfe;
+        }
+
+        .modal-button.secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .modal-button.secondary:hover {
+            background: #e9ecef;
+        }
+
+        .days-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            max-width: 120px;
+            margin-top: 8px;
+        }
+
+        .days-input-wrapper input[type="number"] {
+            border: none;
+            background: none;
+            padding: 4px;
+            font-size: 1rem;
+            text-align: center;
+            width: 50px;
+            margin: 0;
+        }
+
+        .days-input-wrapper input[type="number"]:focus {
+            box-shadow: none;
+            border: none;
+            outline: none;
+        }
+
+        .days-input-wrapper span {
+            font-size: 0.9rem;
+            color: #666;
+            margin-left: 8px;
+        }
+
         .submit-btn, .btn {
             width: 100%;
             padding: 16px;
