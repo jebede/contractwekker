@@ -141,7 +141,8 @@ try {
         $unsubscribeToken
     ]);
     
-    $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.<br><br><strong>Let op:</strong> We doen ons best om ervoor te zorgen dat je tijdig bericht ontvangt, maar het kan voorkomen dat een e-mail niet aankomt (bijv. door spamfilters). Voeg daarom ook noreply@contractwekker.nl toe aan je contacten. Houd daarnaast zelf altijd je contracten in de gaten als extra zekerheid.';
+    $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.';
+    $_SESSION['show_disclaimer'] = true;
     header('Location: success.php');
     
 } catch (Exception $e) {

@@ -7,7 +7,9 @@ if (!isset($_SESSION['success'])) {
 }
 
 $message = $_SESSION['success'];
+$showDisclaimer = $_SESSION['show_disclaimer'] ?? false;
 unset($_SESSION['success']);
+unset($_SESSION['show_disclaimer']);
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -58,6 +60,19 @@ unset($_SESSION['success']);
             line-height: 1.6;
             margin-bottom: 30px;
         }
+        
+        .disclaimer {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .disclaimer strong {
+            color: #495057;
+        }
 
         .back-btn {
             display: inline-block;
@@ -81,6 +96,13 @@ unset($_SESSION['success']);
         <div class="success-icon">✅</div>
         <h1>Gelukt!</h1>
         <p><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></p>
+        
+        <?php if ($showDisclaimer): ?>
+        <div class="disclaimer">
+            <p><strong>Let op:</strong> We doen ons best om ervoor te zorgen dat je tijdig bericht ontvangt, maar het kan voorkomen dat een e-mail niet aankomt (bijv. door spamfilters). Voeg daarom ook <strong>noreply@contractwekker.nl</strong> toe aan je contacten. Houd daarnaast zelf altijd je contracten in de gaten als extra zekerheid.</p>
+        </div>
+        <?php endif; ?>
+        
         <a href="index.html" class="back-btn">Nieuwe wekker instellen</a>
     </div>
 </body>

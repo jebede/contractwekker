@@ -350,13 +350,18 @@ include 'views/header.php';
         }
     });
 
-    // Form validation
+    // Form validation and data preparation
     document.getElementById('contractForm').addEventListener('submit', function(e) {
         const honeypot = document.querySelector('input[name="website"]').value;
         if (honeypot) {
             e.preventDefault();
             return false;
         }
+        
+        // Update hidden inputs with current settings before submitting
+        periodicCheckbox.value = currentSettings.isPeriodic ? '1' : '';
+        disableEarlyReminderCheckbox.value = currentSettings.sendEarlyReminder ? '' : '1';
+        earlyReminderDaysInput.value = currentSettings.earlyReminderDays;
         
         const alertPeriod = alertPeriodSelect.value;
         if (alertPeriod === 'custom') {
@@ -377,6 +382,8 @@ include 'views/header.php';
                 return false;
             }
         }
+        
+        console.log('Form submitting with settings:', currentSettings);
     });
 </script>
 
