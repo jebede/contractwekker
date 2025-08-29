@@ -128,7 +128,7 @@ try {
         } catch (Exception $e) {
             $errorCount++;
             error_log("Error processing alert {$alert['id']}: " . $e->getMessage());
-            echo "Error processing alert {$alert['id']}: " . $e->getMessage() . "\n";
+            echo "Error processing alert {$alert['id']}\n";
         }
     }
     
@@ -139,7 +139,7 @@ try {
     
 } catch (Exception $e) {
     error_log("Cronjob error: " . $e->getMessage());
-    echo "Cronjob error: " . $e->getMessage() . "\n";
+    echo "An error occurred. Check logs for details.\n";
     exit(1);
 }
 ?>

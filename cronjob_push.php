@@ -214,7 +214,8 @@ try {
             
         } catch (Exception $e) {
             $errorCount += count($userAlerts);
-            echo "Error processing alerts for token " . substr($pushToken, 0, 20) . "...: " . $e->getMessage() . "\n";
+            error_log("Error processing alerts for token " . substr($pushToken, 0, 20) . "...: " . $e->getMessage());
+            echo "Error processing alerts for token " . substr($pushToken, 0, 20) . "...\n";
         }
     }
     
@@ -224,10 +225,12 @@ try {
     echo "- Total processed: " . ($successCount + $errorCount) . " alerts\n";
     
 } catch(PDOException $e) {
-    echo "Database error: " . $e->getMessage() . "\n";
+    error_log("Database error in cronjob_push: " . $e->getMessage());
+    echo "Database error occurred. Check logs for details.\n";
     exit(1);
 } catch(Exception $e) {
-    echo "General error: " . $e->getMessage() . "\n";
+    error_log("General error in cronjob_push: " . $e->getMessage());
+    echo "An error occurred. Check logs for details.\n";
     exit(1);
 }
 ?>

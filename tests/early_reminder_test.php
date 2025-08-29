@@ -146,7 +146,8 @@ try {
     echo "\nAll tests completed successfully!\n";
     
 } catch (Exception $e) {
-    echo "Test error: " . $e->getMessage() . "\n";
+    error_log("Test error: " . $e->getMessage());
+    echo "Test error occurred. Check logs for details.\n";
     exit(1);
 }
 ?>
