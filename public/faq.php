@@ -27,7 +27,7 @@ include 'views/header.php';
     <p>Ja, Contractwekker is volledig gratis te gebruiken. We geloven dat iedereen toegang moet hebben tot hulpmiddelen om hun contracten beter te beheren.</p>
     
     <h2>Hoe veilig zijn mijn gegevens?</h2>
-    <p>We nemen je privacy zeer serieus. Lees ons <a href="/privacy.php">privacy beleid</a> voor meer informatie over hoe we omgaan met je gegevens.</p>
+    <p>We nemen je privacy zeer serieus. Lees ons <a href="/privacy">privacy beleid</a> voor meer informatie over hoe we omgaan met je gegevens.</p>
     
     <h2>Welke contracten kan ik toevoegen?</h2>
     <p>Je kunt alle soorten contracten toevoegen: telefoon, internet, verzekeringen, streamingdiensten, fitness abonnementen, energiecontracten en meer. Als je contract er niet bij staat, kies dan "Anders" en voer de naam zelf in.</p>
@@ -46,7 +46,7 @@ include 'views/header.php';
     
     <div style="margin-top: 40px; text-align: center;">
         <a href="/" class="btn">← Terug naar Home</a>
-        <a href="/contact.php" class="btn" style="margin-left: 10px;">Contact</a>
+        <a href="/contact" class="btn" style="margin-left: 10px;">Contact</a>
     </div>
 </div>
 

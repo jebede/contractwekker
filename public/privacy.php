@@ -54,14 +54,17 @@ include 'views/header.php';
     
     <p>We maken gebruik van de volgende derde partijen voor onze dienstverlening:</p>
     <ul>
-        <li><strong>Vimexx</strong> - Hosting provider (voor het bewaren van gegevens)</li>
+        <li><strong>Vimexx</strong> - Hosting provider (voor het bewaren van gegevens en het hosten van Matomo Analytics)</li>
         <li><strong>Netcup</strong> - Hosting provider (voor het bewaren van gegevens)</li>
         <li><strong>Mailgun</strong> - E-mail service provider (voor het versturen van herinneringen)</li>
+        <li><strong>Matomo</strong> - Privacy-vriendelijke analytics software (zelf gehost)</li>
     </ul>
     <p>Contractwekker.nl blijft verantwoordelijk voor deze verwerkingen.</p>
     
     <h2>Cookies, of vergelijkbare technieken, die wij gebruiken</h2>
     <p>Contractwekker.nl gebruikt technische en functionele cookies. Een cookie is een klein tekstbestand dat bij het eerste bezoek aan deze website wordt opgeslagen op uw computer, tablet of smartphone. De cookies die wij gebruiken zijn noodzakelijk voor de technische werking van de website en uw gebruiksgemak. Ze zorgen ervoor dat de website naar behoren werkt en onthouden bijvoorbeeld uw voorkeursinstellingen. Ook kunnen wij hiermee onze website optimaliseren.</p>
+    
+    <p>Voor analytische doeleinden maken we gebruik van Matomo, een privacy-vriendelijke analytics tool die we zelf hosten. Matomo helpt ons te begrijpen hoe bezoekers onze website gebruiken, zodat we onze dienstverlening kunnen verbeteren.</p>
     
     <p>U kunt zich afmelden voor cookies door uw internetbrowser zo in te stellen dat deze geen cookies meer opslaat. Daarnaast kunt u ook alle informatie die eerder is opgeslagen via de instellingen van uw browser verwijderen.</p>
     

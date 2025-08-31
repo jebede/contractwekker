@@ -143,7 +143,7 @@ try {
     
     $_SESSION['success'] = 'Bedankt voor een contractwekker voor ' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '! Je ontvangt je contractwekker per e-mail.';
     $_SESSION['show_disclaimer'] = true;
-    header('Location: success.php');
+    header('Location: success');
     
 } catch (Exception $e) {
     error_log("Registration error: " . $e->getMessage());

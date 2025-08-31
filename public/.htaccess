@@ -1,7 +1,27 @@
 RewriteEngine On
+
 # Redirect www to non-www for contractwekker.nl
 RewriteCond %{HTTP_HOST} ^www\.contractwekker\.nl$ [NC]
 RewriteRule ^(.*)$ https://contractwekker.nl/$1 [R=301,L]
+
+# Redirect .php extensions to clean URLs (301 redirect)
+# Exceptions for api.php and get_products.php
+RewriteCond %{THE_REQUEST} \s/([^/\s]+)\.php[\s?] [NC]
+RewriteCond %{REQUEST_URI} !^/api\.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/get_products\.php$ [NC]
+RewriteRule ^(.*)\.php$ /$1 [R=301,L]
+
+# Route all non-file requests through index.php (works with both Herd and Apache)
+# Exceptions for api.php, get_products.php and deploy-script
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api\.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/get_products\.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/deploy-script222\.php$ [NC]
+RewriteRule ^(.*)$ /index.php [L,QSA]
+
+# Allow direct access to api.php and get_products.php
+RewriteRule ^(api|get_products)\.php$ - [L]
 
 # Security Headers
 <IfModule mod_headers.c>
