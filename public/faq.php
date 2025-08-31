@@ -2,7 +2,7 @@
 // Set page variables
 $page_title = 'Veelgestelde vragen - Contractwekker';
 $meta_description = 'Veelgestelde vragen over Contractwekker. Vind antwoorden op je vragen over het instellen, wijzigen en verwijderen van contract herinneringen.';
-$canonical_url = 'https://contractwekker.nl/faq.php';
+$canonical_url = 'https://contractwekker.nl/faq';
 $header_subtitle = 'Antwoorden op je vragen';
 
 // Include header

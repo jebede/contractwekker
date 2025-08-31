@@ -2,7 +2,7 @@
 // Set page variables
 $page_title = 'Contact - Contractwekker';
 $meta_description = 'Heb je vragen over Contractwekker? Neem contact met ons op. We helpen je graag met het instellen van je contract herinneringen.';
-$canonical_url = 'https://contractwekker.nl/contact.php';
+$canonical_url = 'https://contractwekker.nl/contact';
 $header_subtitle = 'We helpen je graag';
 
 // Include header

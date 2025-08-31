@@ -7,7 +7,7 @@ require_once '../config.php';
 try {
     $pdo = Config::getDatabaseConnection();
     
-    $stmt = $pdo->prepare("SELECT id, name FROM products ORDER BY name ASC");
+    $stmt = $pdo->prepare("SELECT id, name FROM products ORDER BY id ASC");
     $stmt->execute();
     $products = $stmt->fetchAll();
     

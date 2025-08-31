@@ -33,7 +33,7 @@ class EmailService {
     }
     
     private function buildAlertEmailBody($alert, $product, $isEarlyReminder = false) {
-        $unsubscribeUrl = Config::get('BASE_URL', 'https://contractwekker.nl') . "/unsubscribe.php?token=" . urlencode($alert['unsubscribe_token']);
+        $unsubscribeUrl = Config::get('BASE_URL', 'https://contractwekker.nl') . "/unsubscribe?token=" . urlencode($alert['unsubscribe_token']);
         $settingsUrl = Config::get('BASE_URL', 'https://contractwekker.nl') . "/";
         
         $periodicText = '';

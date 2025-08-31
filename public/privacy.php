@@ -2,7 +2,7 @@
 // Set page variables
 $page_title = 'Privacy Beleid - Contractwekker';
 $meta_description = 'Lees ons privacy beleid en ontdek hoe Contractwekker omgaat met je persoonlijke gegevens. Transparant en veilig.';
-$canonical_url = 'https://contractwekker.nl/privacy.php';
+$canonical_url = 'https://contractwekker.nl/privacy';
 $header_subtitle = 'Hoe wij omgaan met je gegevens';
 
 // Include header
