@@ -149,6 +149,6 @@ try {
     error_log("Registration error: " . $e->getMessage());
     $_SESSION['errors'] = ['Er is een fout opgetreden. Probeer het opnieuw.'];
     $_SESSION['form_data'] = $_POST;
-    header('Location: index.html');
+    header('Location: /');
 }
 ?>
