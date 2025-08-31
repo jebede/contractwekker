@@ -149,14 +149,14 @@ if (empty($token)) {
                     <span class="product-name"><?= htmlspecialchars($alert['product_name'] ?: $alert['custom_product_name'], ENT_QUOTES, 'UTF-8') ?></span>.
                 </p>
                 <p>Je ontvangt geen verdere e-mails meer voor dit contract.</p>
-                <a href="index.html" class="btn">Nieuwe wekker instellen</a>
+                <a href="/" class="btn">Nieuwe wekker instellen</a>
             </div>
         <?php else: ?>
             <div class="error">
                 <div class="icon error-icon">❌</div>
                 <h1>Afmelden mislukt</h1>
                 <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
-                <a href="index.html" class="btn btn-secondary">Terug naar home</a>
+                <a href="/" class="btn btn-secondary">Terug naar home</a>
             </div>
         <?php endif; ?>
     </div>

@@ -103,7 +103,7 @@ unset($_SESSION['show_disclaimer']);
         </div>
         <?php endif; ?>
         
-        <a href="index.html" class="back-btn">Nieuwe wekker instellen</a>
+        <a href="/" class="back-btn">Nieuwe wekker instellen</a>
     </div>
 </body>
 </html>
