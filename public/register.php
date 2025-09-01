@@ -8,14 +8,14 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: index.html');
+    header('Location: /');
     exit;
 }
 
 // Check honeypot
 if (isBot($_POST['website'] ?? '')) {
     error_log("Bot detected: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-    header('Location: index.html');
+    header('Location: /');
     exit;
 }
 
@@ -85,7 +85,7 @@ if (isset($_POST['early_reminder_days'])) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['form_data'] = $_POST;
-    header('Location: index.html');
+    header('Location: /');
     exit;
 }
 
