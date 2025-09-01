@@ -85,20 +85,23 @@ try {
                         
                         // Calculate new early reminder date if enabled
                         $earlyReminderDate = null;
+                        $resetEarlyReminderSent = 0;
                         if ($alert['send_early_reminder'] && $alert['early_reminder_days'] > 0) {
                             $earlyReminderDate = date('Y-m-d', strtotime($nextAlertDate . ' -' . $alert['early_reminder_days'] . ' days'));
+                            // Only reset early_reminder_sent if the new early reminder date is in the future
+                            $resetEarlyReminderSent = (strtotime($earlyReminderDate) > time()) ? 0 : 1;
                         }
                         
-                        // Update next alert date and reset early reminder
+                        // Update next alert date and reset early reminder only if appropriate
                         $updateStmt = $pdo->prepare("
                             UPDATE alerts 
                             SET next_alert_date = ?, 
                                 early_reminder_date = ?,
-                                early_reminder_sent = 0,
+                                early_reminder_sent = ?,
                                 updated_at = NOW() 
                             WHERE id = ?
                         ");
-                        $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $alert['id']]);
+                        $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $resetEarlyReminderSent, $alert['id']]);
                         
                         echo "Updated periodic alert {$alert['id']} for {$alert['email']} - next: {$nextAlertDate}\n";
                     } else {
