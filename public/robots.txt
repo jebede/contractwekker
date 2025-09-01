@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /api.php
+Disallow: /get_products.php
+Disallow: /register
+Disallow: /success
+Disallow: /unsubscribe
+Disallow: /unsubscribe.php

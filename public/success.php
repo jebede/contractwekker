@@ -90,6 +90,8 @@ unset($_SESSION['show_disclaimer']);
             box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
         }
     </style>
+
+    <?php include __DIR__ . '/views/matomo.php'; ?>
 </head>
 <body>
     <div class="success-container">
