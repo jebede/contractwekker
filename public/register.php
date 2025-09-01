@@ -2,8 +2,6 @@
 session_start();
 require_once '../config.php';
 
-// Debug logging
-error_log("register.php accessed - Method: " . $_SERVER['REQUEST_METHOD'] . " URI: " . $_SERVER['REQUEST_URI']);
 
 // CSRF protection
 if (!isset($_SESSION['csrf_token'])) {
@@ -11,14 +9,12 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    error_log("register.php: Not a POST request, redirecting");
     header('Location: /');
     exit;
 }
 
 // Check honeypot
 if (isBot($_POST['website'] ?? '')) {
-    error_log("Bot detected: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
     header('Location: /');
     exit;
 }
@@ -87,7 +83,6 @@ if (isset($_POST['early_reminder_days'])) {
 }
 
 if (!empty($errors)) {
-    error_log("register.php: Validation errors: " . implode(', ', $errors));
     $_SESSION['errors'] = $errors;
     $_SESSION['form_data'] = $_POST;
     header('Location: /');
@@ -151,7 +146,6 @@ try {
     header('Location: success');
     
 } catch (Exception $e) {
-    error_log("Registration error: " . $e->getMessage());
     $_SESSION['errors'] = ['Er is een fout opgetreden. Probeer het opnieuw.'];
     $_SESSION['form_data'] = $_POST;
     header('Location: /');

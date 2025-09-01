@@ -10,7 +10,7 @@ else
 fi
 
 # Vimexx Deploy trigger
-curl -s 'https://contractwekker.nl/deploy-script222.php?secret=dsdsa-asd32189AA43213-dasadsdsa-dsaasdsa';
+curl -s 'https://contractwekker.nl/deploy-script222?secret=dsdsa-asd32189AA43213-dasadsdsa-dsaasdsa';
 
 echo 'Deployment triggered!'
 
