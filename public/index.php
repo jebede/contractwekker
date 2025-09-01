@@ -21,6 +21,7 @@ $routes = [
     'success' => 'success.php',
     'unsubscribe' => 'unsubscribe.php',
     'get_products' => 'get_products.php',
+    'deploy-script222' => 'deploy-script222.php',
 ];
 
 // Check if we're accessing a .php file directly (except api.php and get_products.php)
