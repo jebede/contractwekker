@@ -20,6 +20,7 @@ $routes = [
     'register' => 'register.php',
     'success' => 'success.php',
     'unsubscribe' => 'unsubscribe.php',
+    'get_products' => 'get_products.php',
 ];
 
 // Check if we're accessing a .php file directly (except api.php and get_products.php)

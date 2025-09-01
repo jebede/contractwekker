@@ -199,7 +199,7 @@ include 'views/header.php';
     updateSummaryText();
     
     // Load products
-    fetch('get_products.php')
+    fetch('get_products')
         .then(response => response.json())
         .then(products => {
             products.forEach(product => {

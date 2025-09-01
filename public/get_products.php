@@ -4,6 +4,7 @@ header('X-Content-Type-Options: nosniff');
 
 require_once '../config.php';
 
+
 try {
     $pdo = Config::getDatabaseConnection();
     

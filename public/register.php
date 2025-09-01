@@ -2,12 +2,16 @@
 session_start();
 require_once '../config.php';
 
+// Debug logging
+error_log("register.php accessed - Method: " . $_SERVER['REQUEST_METHOD'] . " URI: " . $_SERVER['REQUEST_URI']);
+
 // CSRF protection
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = generateToken();
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    error_log("register.php: Not a POST request, redirecting");
     header('Location: /');
     exit;
 }
@@ -83,6 +87,7 @@ if (isset($_POST['early_reminder_days'])) {
 }
 
 if (!empty($errors)) {
+    error_log("register.php: Validation errors: " . implode(', ', $errors));
     $_SESSION['errors'] = $errors;
     $_SESSION['form_data'] = $_POST;
     header('Location: /');
