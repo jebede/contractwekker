@@ -21,9 +21,10 @@ try {
                CASE 
                    WHEN a.send_early_reminder = 1 
                         AND a.early_reminder_date <= CURDATE() 
-                        AND a.early_reminder_sent = 0 
+                        AND (a.last_email_early_sent IS NULL OR a.last_email_early_sent < a.early_reminder_date)
                    THEN 'early'
                    WHEN a.next_alert_date <= CURDATE() 
+                        AND (a.last_email_sent IS NULL OR a.last_email_sent < a.next_alert_date)
                    THEN 'regular'
                    ELSE NULL
                END as reminder_type
@@ -32,8 +33,8 @@ try {
         WHERE a.is_active = 1 
         AND a.email IS NOT NULL
         AND (
-            (a.send_early_reminder = 1 AND a.early_reminder_date <= CURDATE() AND a.early_reminder_sent = 0)
-            OR (a.next_alert_date <= CURDATE())
+            (a.send_early_reminder = 1 AND a.early_reminder_date <= CURDATE() AND (a.last_email_early_sent IS NULL OR a.last_email_early_sent < a.early_reminder_date))
+            OR (a.next_alert_date <= CURDATE() AND (a.last_email_sent IS NULL OR a.last_email_sent < a.next_alert_date))
         )
         ORDER BY a.next_alert_date ASC 
         LIMIT 50
@@ -63,13 +64,13 @@ try {
                 $sentCount++;
                 
                 if ($isEarlyReminder) {
-                    // Mark early reminder as sent
+                    // Mark early reminder as sent with the target date
                     $updateStmt = $pdo->prepare("
                         UPDATE alerts 
-                        SET early_reminder_sent = 1, updated_at = NOW() 
+                        SET last_email_early_sent = ?, updated_at = NOW() 
                         WHERE id = ?
                     ");
-                    $updateStmt->execute([$alert['id']]);
+                    $updateStmt->execute([$alert['early_reminder_date'], $alert['id']]);
                     
                     echo "Sent early reminder to {$alert['email']} for {$product['name']} ({$alert['early_reminder_days']} days before main reminder)\n";
                 } else {
@@ -85,33 +86,32 @@ try {
                         
                         // Calculate new early reminder date if enabled
                         $earlyReminderDate = null;
-                        $resetEarlyReminderSent = 0;
                         if ($alert['send_early_reminder'] && $alert['early_reminder_days'] > 0) {
                             $earlyReminderDate = date('Y-m-d', strtotime($nextAlertDate . ' -' . $alert['early_reminder_days'] . ' days'));
-                            // Only reset early_reminder_sent if the new early reminder date is in the future
-                            $resetEarlyReminderSent = (strtotime($earlyReminderDate) > time()) ? 0 : 1;
                         }
                         
-                        // Update next alert date and reset early reminder only if appropriate
+                        // Update next alert date and mark regular email as sent
                         $updateStmt = $pdo->prepare("
                             UPDATE alerts 
                             SET next_alert_date = ?, 
                                 early_reminder_date = ?,
-                                early_reminder_sent = ?,
+                                last_email_sent = ?,
                                 updated_at = NOW() 
                             WHERE id = ?
                         ");
-                        $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $resetEarlyReminderSent, $alert['id']]);
+                        $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $alert['next_alert_date'], $alert['id']]);
                         
                         echo "Updated periodic alert {$alert['id']} for {$alert['email']} - next: {$nextAlertDate}\n";
                     } else {
-                        // Deactivate one-time alert
+                        // Deactivate one-time alert and mark as sent
                         $updateStmt = $pdo->prepare("
                             UPDATE alerts 
-                            SET is_active = 0, updated_at = NOW() 
+                            SET is_active = 0, 
+                                last_email_sent = ?,
+                                updated_at = NOW() 
                             WHERE id = ?
                         ");
-                        $updateStmt->execute([$alert['id']]);
+                        $updateStmt->execute([$alert['next_alert_date'], $alert['id']]);
                         
                         echo "Deactivated one-time alert {$alert['id']} for {$alert['email']}\n";
                     }

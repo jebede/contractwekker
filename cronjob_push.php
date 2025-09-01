@@ -60,13 +60,14 @@ try {
     $stmt = $pdo->prepare("
         SELECT a.id, a.push_token, a.custom_product_name, a.alert_period, a.is_periodic, 
                a.first_alert_date, a.next_alert_date, a.send_early_reminder, a.early_reminder_days,
-               a.early_reminder_date, a.early_reminder_sent, p.name as product_name, p.deeplink,
+               a.early_reminder_date, p.name as product_name, p.deeplink,
                CASE 
                    WHEN a.send_early_reminder = 1 
                         AND a.early_reminder_date = ?
-                        AND a.early_reminder_sent = 0 
+                        AND (a.last_push_early_sent IS NULL OR a.last_push_early_sent < a.early_reminder_date)
                    THEN 'early'
                    WHEN a.next_alert_date = ?
+                        AND (a.last_push_sent IS NULL OR a.last_push_sent < a.next_alert_date)
                    THEN 'regular'
                    ELSE NULL
                END as reminder_type
@@ -75,8 +76,8 @@ try {
         WHERE a.push_token IS NOT NULL 
           AND a.is_active = 1 
           AND (
-              (a.send_early_reminder = 1 AND a.early_reminder_date = ? AND a.early_reminder_sent = 0)
-              OR (a.next_alert_date = ? AND a.is_sent = 0)
+              (a.send_early_reminder = 1 AND a.early_reminder_date = ? AND (a.last_push_early_sent IS NULL OR a.last_push_early_sent < a.early_reminder_date))
+              OR (a.next_alert_date = ? AND (a.last_push_sent IS NULL OR a.last_push_sent < a.next_alert_date))
           )
         ORDER BY a.id
     ");
@@ -147,14 +148,14 @@ try {
                     $isEarlyReminder = ($alert['reminder_type'] === 'early');
                     
                     if ($isEarlyReminder) {
-                        // Mark early reminder as sent
-                        $updateStmt = $pdo->prepare("UPDATE alerts SET early_reminder_sent = 1, updated_at = NOW() WHERE id = ?");
-                        $updateStmt->execute([$alert['id']]);
+                        // Mark early reminder as sent with the target date
+                        $updateStmt = $pdo->prepare("UPDATE alerts SET last_push_early_sent = ?, updated_at = NOW() WHERE id = ?");
+                        $updateStmt->execute([$alert['early_reminder_date'], $alert['id']]);
                         echo "Sent early reminder for alert ID {$alert['id']}\n";
                     } else {
-                        // Mark regular alert as sent
-                        $updateStmt = $pdo->prepare("UPDATE alerts SET is_sent = 1, updated_at = NOW() WHERE id = ?");
-                        $updateStmt->execute([$alert['id']]);
+                        // Mark regular alert as sent with the target date
+                        $updateStmt = $pdo->prepare("UPDATE alerts SET last_push_sent = ?, updated_at = NOW() WHERE id = ?");
+                        $updateStmt->execute([$alert['next_alert_date'], $alert['id']]);
                         
                         if ($alert['is_periodic']) {
                         $nextAlertDate = null;
@@ -194,8 +195,6 @@ try {
                                     UPDATE alerts 
                                     SET next_alert_date = ?, 
                                         early_reminder_date = ?,
-                                        early_reminder_sent = 0,
-                                        is_sent = 0, 
                                         updated_at = NOW() 
                                     WHERE id = ?
                                 ");

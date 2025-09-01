@@ -92,7 +92,7 @@ class EmailService {
                     
                     <div style='text-align: center; margin: 30px 0;'>
                         <a href='{$product['deeplink']}' 
-                           style='display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: 600; font-size: 16px;'>
+                           style='display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: 600; font-size: 16px;'>
                             🔍 Bekijk nieuwe {$product['name']} opties
                         </a>
                     </div>
