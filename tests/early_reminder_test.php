@@ -53,17 +53,17 @@ try {
     
     // Set early reminder date to today to simulate it should be sent
     $today = date('Y-m-d');
-    $stmt = $pdo->prepare("UPDATE alerts SET early_reminder_date = ?, early_reminder_sent = 0 WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE alerts SET early_reminder_date = ? WHERE id = ?");
     $stmt->execute([$today, $testAlertId]);
     
-    // Check that the alert would be selected for early reminder
+    // Check that the alert would be selected for early reminder using new timestamp logic
     $stmt = $pdo->prepare("
         SELECT COUNT(*) as count 
         FROM alerts 
         WHERE id = ? 
         AND send_early_reminder = 1 
         AND early_reminder_date <= CURDATE() 
-        AND early_reminder_sent = 0
+        AND (last_email_early_sent IS NULL OR last_email_early_sent < early_reminder_date)
     ");
     $stmt->execute([$testAlertId]);
     $count = $stmt->fetch()['count'];
@@ -74,9 +74,9 @@ try {
         echo "✗ Alert not properly identified for early reminder sending\n";
     }
     
-    // Simulate marking early reminder as sent
-    $stmt = $pdo->prepare("UPDATE alerts SET early_reminder_sent = 1 WHERE id = ?");
-    $stmt->execute([$testAlertId]);
+    // Simulate marking early reminder as sent using new timestamp
+    $stmt = $pdo->prepare("UPDATE alerts SET last_email_early_sent = ? WHERE id = ?");
+    $stmt->execute([$today, $testAlertId]);
     
     // Check that it's no longer selected
     $stmt = $pdo->prepare("
@@ -85,7 +85,7 @@ try {
         WHERE id = ? 
         AND send_early_reminder = 1 
         AND early_reminder_date <= CURDATE() 
-        AND early_reminder_sent = 0
+        AND (last_email_early_sent IS NULL OR last_email_early_sent < early_reminder_date)
     ");
     $stmt->execute([$testAlertId]);
     $count = $stmt->fetch()['count'];
@@ -100,16 +100,16 @@ try {
     echo "\nTest 3: Regular reminder timing\n";
     
     // Set next alert date to today
-    $stmt = $pdo->prepare("UPDATE alerts SET next_alert_date = ?, is_sent = 0 WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE alerts SET next_alert_date = ? WHERE id = ?");
     $stmt->execute([$today, $testAlertId]);
     
-    // Check that regular reminder would be sent
+    // Check that regular reminder would be sent using new timestamp logic
     $stmt = $pdo->prepare("
         SELECT COUNT(*) as count 
         FROM alerts 
         WHERE id = ? 
         AND next_alert_date <= CURDATE()
-        AND is_sent = 0
+        AND (last_email_sent IS NULL OR last_email_sent < next_alert_date)
     ");
     $stmt->execute([$testAlertId]);
     $count = $stmt->fetch()['count'];

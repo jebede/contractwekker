@@ -193,17 +193,17 @@ runTest("Push cronjob only processes today's alerts", function() {
     $pdo = Config::getDatabaseConnection();
     
     // Create test push alert for today
-    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, is_sent, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, 0, bin2hex(random_bytes(16))]);
+    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, bin2hex(random_bytes(16))]);
     $alertId = $pdo->lastInsertId();
     
-    // Check it's selected for processing
+    // Check it's selected for processing using new timestamp logic
     $stmt = $pdo->prepare("
         SELECT id FROM alerts 
         WHERE push_token IS NOT NULL 
         AND is_active = 1 
-        AND is_sent = 0
         AND next_alert_date = ?
+        AND (last_push_sent IS NULL OR last_push_sent < next_alert_date)
     ");
     $stmt->execute([date('Y-m-d')]);
     $found = false;
@@ -224,19 +224,19 @@ runTest("Push alerts are marked as sent", function() {
     $pdo = Config::getDatabaseConnection();
     
     // Create test push alert
-    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, is_sent, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, 0, bin2hex(random_bytes(16))]);
+    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, bin2hex(random_bytes(16))]);
     $alertId = $pdo->lastInsertId();
     
-    // Simulate marking as sent
-    $updateStmt = $pdo->prepare("UPDATE alerts SET is_sent = 1 WHERE id = ?");
-    $updateStmt->execute([$alertId]);
+    // Simulate marking as sent using new timestamp
+    $updateStmt = $pdo->prepare("UPDATE alerts SET last_push_sent = ? WHERE id = ?");
+    $updateStmt->execute([date('Y-m-d'), $alertId]);
     
     // Check it's marked as sent
-    $stmt = $pdo->prepare("SELECT is_sent FROM alerts WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT last_push_sent FROM alerts WHERE id = ?");
     $stmt->execute([$alertId]);
     $row = $stmt->fetch();
-    $isSent = ($row['is_sent'] == 1);
+    $isSent = ($row['last_push_sent'] == date('Y-m-d'));
     
     // Cleanup
     $pdo->exec("DELETE FROM alerts WHERE id = $alertId");
@@ -244,24 +244,25 @@ runTest("Push alerts are marked as sent", function() {
     return $isSent;
 });
 
-runTest("Periodic push alerts reset is_sent and update next_alert_date", function() {
+runTest("Periodic push alerts update next_alert_date and track last sent", function() {
     $pdo = Config::getDatabaseConnection();
     
     // Create periodic push alert
-    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, is_sent, is_periodic, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, 1, 1, bin2hex(random_bytes(16))]);
+    $stmt = $pdo->prepare("INSERT INTO alerts (push_token, custom_product_name, alert_period, first_alert_date, next_alert_date, is_active, is_periodic, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->execute(['ExponentPushToken[test]', 'Test Product', '1_month', date('Y-m-d'), date('Y-m-d'), 1, 1, bin2hex(random_bytes(16))]);
     $alertId = $pdo->lastInsertId();
     
-    // Simulate periodic update
+    // Simulate periodic update (what cronjob would do)
+    $currentDate = date('Y-m-d');
     $nextDate = date('Y-m-d', strtotime('+1 month'));
-    $updateStmt = $pdo->prepare("UPDATE alerts SET next_alert_date = ?, is_sent = 0, updated_at = NOW() WHERE id = ?");
-    $updateStmt->execute([$nextDate, $alertId]);
+    $updateStmt = $pdo->prepare("UPDATE alerts SET next_alert_date = ?, last_push_sent = ?, updated_at = NOW() WHERE id = ?");
+    $updateStmt->execute([$nextDate, $currentDate, $alertId]);
     
     // Check updates
-    $stmt = $pdo->prepare("SELECT next_alert_date, is_sent FROM alerts WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT next_alert_date, last_push_sent FROM alerts WHERE id = ?");
     $stmt->execute([$alertId]);
     $row = $stmt->fetch();
-    $isCorrect = ($row['next_alert_date'] == $nextDate && $row['is_sent'] == 0);
+    $isCorrect = ($row['next_alert_date'] == $nextDate && $row['last_push_sent'] == $currentDate);
     
     // Cleanup
     $pdo->exec("DELETE FROM alerts WHERE id = $alertId");
