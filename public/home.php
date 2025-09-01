@@ -230,8 +230,14 @@ include 'views/header.php';
         const contractEndDateDiv = document.getElementById('contractEndDate');
         if (this.value === 'custom') {
             contractEndDateDiv.classList.add('show');
+            // Force custom alerts to be non-periodic
+            currentSettings.isPeriodic = false;
         } else {
             contractEndDateDiv.classList.remove('show');
+            // Restore periodic option for non-custom alerts
+            if (!currentSettings.isPeriodic) {
+                currentSettings.isPeriodic = true;
+            }
         }
         updatePeriodicText();
         
@@ -279,11 +285,17 @@ include 'views/header.php';
     }
     
     function updateModalSelections() {
+        const isCustomPeriod = alertPeriodSelect.value === 'custom';
+        
         // Update periodic options
         const periodicOptions = document.querySelectorAll('[data-option="periodic"]');
         periodicOptions.forEach(option => {
             const isSelected = (option.dataset.value === 'true') === currentSettings.isPeriodic;
             option.classList.toggle('selected', isSelected);
+            // Disable periodic options for custom alerts
+            option.classList.toggle('disabled', isCustomPeriod);
+            option.style.opacity = isCustomPeriod ? '0.5' : '1';
+            option.style.pointerEvents = isCustomPeriod ? 'none' : 'auto';
         });
         
         // Update early reminder options
@@ -321,6 +333,11 @@ include 'views/header.php';
             const option = e.target.closest('.modal-option');
             const optionType = option.dataset.option;
             const value = option.dataset.value === 'true';
+            
+            // Prevent changing periodic setting for custom alerts
+            if (optionType === 'periodic' && alertPeriodSelect.value === 'custom') {
+                return; // Do nothing for custom alerts
+            }
             
             if (optionType === 'periodic') {
                 currentSettings.isPeriodic = value;

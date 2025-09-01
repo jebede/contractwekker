@@ -75,8 +75,8 @@ try {
                     echo "Sent early reminder to {$alert['email']} for {$product['name']} ({$alert['early_reminder_days']} days before main reminder)\n";
                 } else {
                     // Handle regular reminder
-                    if ($alert['is_periodic']) {
-                        // Calculate next alert date
+                    if ($alert['is_periodic'] && $alert['alert_period'] !== 'custom') {
+                        // Calculate next alert date for periodic alerts (excluding custom)
                         $nextAlertDate = calculateNextAlertDate(
                             $alert['alert_period'], 
                             null, 
@@ -103,7 +103,7 @@ try {
                         
                         echo "Updated periodic alert {$alert['id']} for {$alert['email']} - next: {$nextAlertDate}\n";
                     } else {
-                        // Deactivate one-time alert and mark as sent
+                        // Deactivate one-time alert or custom alert and mark as sent
                         $updateStmt = $pdo->prepare("
                             UPDATE alerts 
                             SET is_active = 0, 
@@ -113,7 +113,8 @@ try {
                         ");
                         $updateStmt->execute([$alert['next_alert_date'], $alert['id']]);
                         
-                        echo "Deactivated one-time alert {$alert['id']} for {$alert['email']}\n";
+                        $alertType = ($alert['alert_period'] === 'custom') ? 'custom' : 'one-time';
+                        echo "Deactivated {$alertType} alert {$alert['id']} for {$alert['email']}\n";
                     }
                     
                     echo "Sent regular alert to {$alert['email']} for {$product['name']}\n";

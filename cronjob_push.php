@@ -157,32 +157,28 @@ try {
                         $updateStmt = $pdo->prepare("UPDATE alerts SET last_push_sent = ?, updated_at = NOW() WHERE id = ?");
                         $updateStmt->execute([$alert['next_alert_date'], $alert['id']]);
                         
-                        if ($alert['is_periodic']) {
-                        $nextAlertDate = null;
-                        $alertPeriod = $alert['alert_period'];
-                        
-                        switch ($alertPeriod) {
-                            case '1_month':
-                                $nextAlertDate = date('Y-m-d', strtotime('+1 month'));
-                                break;
-                            case '3_months':
-                                $nextAlertDate = date('Y-m-d', strtotime('+3 months'));
-                                break;
-                            case '1_year':
-                                $nextAlertDate = date('Y-m-d', strtotime('+1 year'));
-                                break;
-                            case '2_years':
-                                $nextAlertDate = date('Y-m-d', strtotime('+2 years'));
-                                break;
-                            case '3_years':
-                                $nextAlertDate = date('Y-m-d', strtotime('+3 years'));
-                                break;
-                            case 'custom':
-                                // For custom periods, add 1 year by default
-                                $nextAlertDate = date('Y-m-d', strtotime('+1 year'));
-                                break;
-                        }
-                        
+                        if ($alert['is_periodic'] && $alert['alert_period'] !== 'custom') {
+                            $nextAlertDate = null;
+                            $alertPeriod = $alert['alert_period'];
+                            
+                            switch ($alertPeriod) {
+                                case '1_month':
+                                    $nextAlertDate = date('Y-m-d', strtotime('+1 month'));
+                                    break;
+                                case '3_months':
+                                    $nextAlertDate = date('Y-m-d', strtotime('+3 months'));
+                                    break;
+                                case '1_year':
+                                    $nextAlertDate = date('Y-m-d', strtotime('+1 year'));
+                                    break;
+                                case '2_years':
+                                    $nextAlertDate = date('Y-m-d', strtotime('+2 years'));
+                                    break;
+                                case '3_years':
+                                    $nextAlertDate = date('Y-m-d', strtotime('+3 years'));
+                                    break;
+                            }
+                            
                             if ($nextAlertDate) {
                                 // Calculate new early reminder date if enabled
                                 $earlyReminderDate = null;
@@ -201,6 +197,18 @@ try {
                                 $updateStmt->execute([$nextAlertDate, $earlyReminderDate, $alert['id']]);
                                 echo "Updated recurring alert ID {$alert['id']}, next date: $nextAlertDate\n";
                             }
+                        } else {
+                            // Deactivate one-time or custom alerts
+                            $updateStmt = $pdo->prepare("
+                                UPDATE alerts 
+                                SET is_active = 0, 
+                                    updated_at = NOW() 
+                                WHERE id = ?
+                            ");
+                            $updateStmt->execute([$alert['id']]);
+                            
+                            $alertType = ($alert['alert_period'] === 'custom') ? 'custom' : 'one-time';
+                            echo "Deactivated {$alertType} push alert ID {$alert['id']}\n";
                         }
                     }
                 }
