@@ -78,24 +78,32 @@ function isBot($honeypot) {
     return !empty($honeypot);
 }
 
-function calculateNextAlertDate($alertPeriod, $customPeriod = null, $customUnit = null, $endDate = null) {
-    $now = new DateTime();
+function calculateNextAlertDate($alertPeriod, $customPeriod = null, $customUnit = null, $endDate = null, $startDate = null) {
+    // Use start date if provided, otherwise use current date
+    if (!empty($startDate)) {
+        $baseDate = DateTime::createFromFormat('Y-m-d', $startDate);
+        if (!$baseDate) {
+            $baseDate = new DateTime();
+        }
+    } else {
+        $baseDate = new DateTime();
+    }
     
     switch ($alertPeriod) {
         case '1_month':
-            $now->add(new DateInterval('P1M'));
+            $baseDate->add(new DateInterval('P1M'));
             break;
         case '3_months':
-            $now->add(new DateInterval('P3M'));
+            $baseDate->add(new DateInterval('P3M'));
             break;
         case '1_year':
-            $now->add(new DateInterval('P1Y'));
+            $baseDate->add(new DateInterval('P1Y'));
             break;
         case '2_years':
-            $now->add(new DateInterval('P2Y'));
+            $baseDate->add(new DateInterval('P2Y'));
             break;
         case '3_years':
-            $now->add(new DateInterval('P3Y'));
+            $baseDate->add(new DateInterval('P3Y'));
             break;
         case 'custom':
             // For custom period, calculate 1 month before the end date
@@ -110,6 +118,6 @@ function calculateNextAlertDate($alertPeriod, $customPeriod = null, $customUnit 
             break;
     }
     
-    return $now->format('Y-m-d H:i:s');
+    return $baseDate->format('Y-m-d H:i:s');
 }
 ?>

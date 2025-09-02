@@ -49,6 +49,17 @@ if (!in_array($alertPeriod, $validPeriods)) {
     $errors[] = 'Selecteer een geldige periode';
 }
 
+// Validate start date
+$startDate = $_POST['start_date'] ?? '';
+if (empty($startDate)) {
+    $errors[] = 'Vul een begindatum in voor je contract';
+} else {
+    $startDateObj = DateTime::createFromFormat('Y-m-d', $startDate);
+    if (!$startDateObj || $startDateObj->format('Y-m-d') !== $startDate) {
+        $errors[] = 'Vul een geldige begindatum in';
+    }
+}
+
 $endDate = null;
 if ($alertPeriod === 'custom') {
     $endDate = $_POST['end_date'] ?? '';
@@ -106,8 +117,8 @@ try {
         $productName = $customProductName;
     }
     
-    // Calculate alert dates
-    $firstAlertDate = calculateNextAlertDate($alertPeriod, null, null, $endDate);
+    // Calculate alert dates using the start date
+    $firstAlertDate = calculateNextAlertDate($alertPeriod, null, null, $endDate, $startDate);
     $nextAlertDate = $firstAlertDate;
     
     // Calculate early reminder date if enabled
@@ -122,8 +133,8 @@ try {
     // Insert email alert
     $stmt = $pdo->prepare("
         INSERT INTO alerts 
-        (email, product_id, custom_product_name, alert_period, end_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, first_alert_date, next_alert_date, unsubscribe_token) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (email, product_id, custom_product_name, alert_period, start_date, end_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, first_alert_date, next_alert_date, unsubscribe_token) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -131,6 +142,7 @@ try {
         $productId,
         $customProductName,
         $alertPeriod,
+        $startDate,
         $endDate,
         $isPeriodic ? 1 : 0,
         $sendEarlyReminder ? 1 : 0,

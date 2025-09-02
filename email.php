@@ -22,7 +22,16 @@ class EmailService {
     
     public function sendContractAlert($alert, $product, $isEarlyReminder = false) {
         if ($isEarlyReminder) {
-            $subject = "⏰ Vroege herinnering: {$product['name']} - nog {$alert['early_reminder_days']} dagen!";
+            // Calculate actual days until main alert
+            $daysUntilMainAlert = floor((strtotime($alert['next_alert_date']) - time()) / (60 * 60 * 24));
+            
+            // Only mention days in subject if it matches the expected early reminder period
+            if ($daysUntilMainAlert >= $alert['early_reminder_days']) {
+                $subject = "⏰ Vroege herinnering: {$product['name']} - nog {$alert['early_reminder_days']} dagen!";
+            } else {
+                // Short duration - don't mention days in subject
+                $subject = "⏰ Vroege herinnering: {$product['name']}";
+            }
         } else {
             $subject = "🔔 Contractwekker voor {$product['name']} - Het is tijd!";
         }
@@ -65,12 +74,30 @@ class EmailService {
                     ";
         
         if ($isEarlyReminder) {
+            // Calculate days until main alert
+            $daysUntilMainAlert = floor((strtotime($alert['next_alert_date']) - time()) / (60 * 60 * 24));
+            
+            // Check if this early reminder is being sent because the alert duration is shorter than requested
+            $isShortDuration = $daysUntilMainAlert < $alert['early_reminder_days'];
+            
             $html .= "
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Dit is een <strong>vroege herinnering</strong> voor je <strong>{$product['name']}</strong> contract. 
-                        Je hoofdherinnering volgt over <strong>{$alert['early_reminder_days']} dagen</strong>. ⏰
-                    </p>
-                    
+                        Je hoofdherinnering volgt over <strong>{$daysUntilMainAlert} dagen</strong>. ⏰
+                    </p>";
+            
+            if ($isShortDuration) {
+                $html .= "
+                    <div style='background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;'>
+                        <p style='font-size: 14px; margin: 0; color: #856404;'>
+                            💡 <strong>Let op:</strong> Je gaf aan dat je een extra notificatie {$alert['early_reminder_days']} dagen van tevoren wilde, 
+                            maar het is korter dan {$alert['early_reminder_days']} dagen tot je contractwekker. 
+                            Daarom ontvang je bij deze het mailtje. Jouw daadwerkelijke contractwekker gaat over {$daysUntilMainAlert} dagen.
+                        </p>
+                    </div>";
+            }
+            
+            $html .= "
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Nu is het perfecte moment om alvast te oriënteren op nieuwe opties en te vergelijken. 
                         Zo ben je goed voorbereid wanneer het tijd is om over te stappen! 💡

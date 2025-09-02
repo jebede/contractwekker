@@ -44,6 +44,7 @@ switch($action) {
         $product_id = $input['product_id'] ?? null;
         $custom_product_name = $input['custom_product_name'] ?? null;
         $alert_period = $input['alert_period'] ?? null;
+        $start_date = $input['start_date'] ?? null;
         $end_date = $input['end_date'] ?? null;
         $is_periodic = $input['is_periodic'] ?? 0;
         $email = $input['email'] ?? null;
@@ -76,7 +77,7 @@ switch($action) {
         }
         
         try {
-            // Calculate alert dates
+            // Calculate alert dates using start_date if provided
             $first_alert_date = null;
             $next_alert_date = null;
             $early_reminder_date = null;
@@ -93,7 +94,9 @@ switch($action) {
                     '3_years' => '+3 years'
                 ];
                 if (isset($periods[$alert_period])) {
-                    $first_alert_date = date('Y-m-d', strtotime($periods[$alert_period]));
+                    // Use start_date as base if provided, otherwise use current date
+                    $base_date = $start_date ? $start_date : 'now';
+                    $first_alert_date = date('Y-m-d', strtotime($base_date . ' ' . $periods[$alert_period]));
                     $next_alert_date = $first_alert_date;
                 }
             }
@@ -112,12 +115,13 @@ switch($action) {
             // Generate unsubscribe token
             $unsubscribe_token = bin2hex(random_bytes(32));
             
-            $stmt = $pdo->prepare("INSERT INTO alerts (product_id, custom_product_name, alert_period, first_alert_date, next_alert_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, email, push_token, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt = $pdo->prepare("INSERT INTO alerts (product_id, custom_product_name, alert_period, start_date, first_alert_date, next_alert_date, is_periodic, send_early_reminder, early_reminder_days, early_reminder_date, email, push_token, unsubscribe_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             
             $params = [
                 $product_id === 'other' ? null : $product_id,
                 $custom_product_name,
                 $alert_period,
+                $start_date,
                 $first_alert_date,
                 $next_alert_date,
                 $is_periodic,

@@ -23,10 +23,14 @@ include 'views/header.php';
                 <label for="custom_product_name">Naam van je contract</label>
                 <input type="text" id="custom_product_name" name="custom_product_name" placeholder="Bijv. Netflix, Spotify, etc.">
             </div>
+            <div style="margin-top: 15px;">
+                <label for="start_date">Begindatum contract</label>
+                <input type="date" id="start_date" name="start_date" required>
+            </div>
         </div>
 
         <div class="form-group">
-            <label for="alert_period">Geef seintje over</label>
+            <label for="alert_period">Geef seintje na</label>
             <div class="custom-select">
                 <select id="alert_period" name="alert_period" required>
                     <option value="">Kies een periode...</option>
@@ -130,7 +134,7 @@ include 'views/header.php';
     let currentSettings = {
         isPeriodic: true,
         sendEarlyReminder: true,
-        earlyReminderDays: 60
+        earlyReminderDays: 60  // Will be updated based on selected period
     };
     
     function getSummaryText(alertPeriod, isPeriodic, sendEarlyReminder, earlyReminderDays) {
@@ -188,6 +192,14 @@ include 'views/header.php';
         emailInput.value = savedEmail;
     }
     
+    // Set today as default start date
+    const startDateInput = document.getElementById('start_date');
+    const today = new Date();
+    const todayString = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0');
+    startDateInput.value = todayString;
+    
     // Save email to session storage when user types
     emailInput.addEventListener('input', function() {
         if (this.value) {
@@ -225,6 +237,60 @@ include 'views/header.php';
         }
     });
 
+    // Calculate smart default for early reminder days based on period
+    function calculateSmartEarlyReminderDays(alertPeriod) {
+        // Map periods to approximate days
+        const periodToDays = {
+            '1_month': 30,
+            '3_months': 90,
+            '1_year': 365,
+            '2_years': 730,
+            '3_years': 1095
+        };
+        
+        if (alertPeriod === 'custom') {
+            // For custom, check if end date is set and calculate
+            const endDate = document.getElementById('end_date').value;
+            if (endDate) {
+                // Custom alerts are set 1 month before end date, so calculate from that
+                const endDateObj = new Date(endDate);
+                const alertDate = new Date(endDate);
+                alertDate.setMonth(alertDate.getMonth() - 1);
+                
+                const now = new Date();
+                let daysUntilAlert = Math.floor((alertDate - now) / (1000 * 60 * 60 * 24));
+                
+                // If alert date would be in the past or very soon, calculate from today to end date
+                if (daysUntilAlert <= 0) {
+                    // Alert would fire immediately, so calculate days from now to end date
+                    daysUntilAlert = Math.floor((endDateObj - now) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysUntilAlert > 0 && daysUntilAlert < 90) {
+                        // Use half of the remaining period
+                        return Math.max(1, Math.floor(daysUntilAlert / 2));
+                    } else if (daysUntilAlert > 0) {
+                        // More than 90 days until end date, but alert is immediate
+                        // Use a reasonable default for immediate alerts
+                        return Math.min(30, daysUntilAlert - 1);
+                    }
+                } else if (daysUntilAlert < 90) {
+                    // Normal case: alert is in the future but less than 90 days
+                    return Math.max(1, Math.floor(daysUntilAlert / 2));
+                }
+            }
+            return 60; // Default for custom without date or long period
+        }
+        
+        const periodDays = periodToDays[alertPeriod];
+        if (periodDays && periodDays < 120) {
+            // For periods less than 120 days (1 month, 3 months), use half the period
+            return Math.floor(periodDays / 2);
+        }
+        
+        // For longer periods (1 year+), keep default of 60 days
+        return 60;
+    }
+
     // Handle custom period visibility
     alertPeriodSelect.addEventListener('change', function() {
         const contractEndDateDiv = document.getElementById('contractEndDate');
@@ -240,6 +306,12 @@ include 'views/header.php';
             }
         }
         updatePeriodicText();
+        
+        // Calculate and update smart default for early reminder days
+        const smartDays = calculateSmartEarlyReminderDays(this.value);
+        currentSettings.earlyReminderDays = smartDays;
+        document.getElementById('modalEarlyDays').value = smartDays;
+        earlyReminderDaysInput.value = smartDays;
         
         // Update summary text immediately when period changes
         updateSummaryText();
@@ -352,13 +424,43 @@ include 'views/header.php';
         }
     });
     
-    // Handle days input change
+    // Handle days input change - allow user override of smart default
     document.getElementById('modalEarlyDays').addEventListener('input', function(e) {
-        const days = parseInt(e.target.value) || 60;
-        if (days >= 1 && days <= 365) {
+        const days = parseInt(e.target.value);
+        if (!isNaN(days) && days >= 1 && days <= 365) {
             currentSettings.earlyReminderDays = days;
+            // User has manually overridden, update the summary
+            updateSummaryText();
         }
     });
+    
+    // Handle end date change for custom periods - listen to both change and blur
+    const endDateInput = document.getElementById('end_date');
+    
+    function handleEndDateUpdate() {
+        if (alertPeriodSelect.value === 'custom' && endDateInput.value) {
+            // Recalculate smart default when end date changes
+            const smartDays = calculateSmartEarlyReminderDays('custom');
+            console.log('Calculated smart days for custom date:', smartDays); // Debug log
+            
+            // Update all places where early reminder days are stored/shown
+            currentSettings.earlyReminderDays = smartDays;
+            document.getElementById('modalEarlyDays').value = smartDays;
+            document.getElementById('early_reminder_days').value = smartDays;
+            
+            // Force update the summary text
+            const summaryElement = document.getElementById('summaryText');
+            summaryElement.textContent = getSummaryText(
+                'custom', 
+                currentSettings.isPeriodic, 
+                currentSettings.sendEarlyReminder, 
+                smartDays
+            );
+        }
+    }
+    
+    endDateInput.addEventListener('change', handleEndDateUpdate);
+    endDateInput.addEventListener('blur', handleEndDateUpdate);
     
     // Close modal on overlay click
     document.getElementById('settingsModal').addEventListener('click', function(e) {
