@@ -415,6 +415,129 @@
             color: #666;
         }
 
+        /* Meer info footer styles */
+        .footer-nav {
+            text-align: center;
+            padding: 20px 0;
+            color: #666;
+        }
+
+        .footer-nav a,
+        .footer-nav button {
+            color: #666;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.9rem;
+        }
+
+        .footer-nav button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .footer-nav button:hover {
+            color: #4facfe;
+        }
+
+        .meer-info-content {
+            max-width: 800px;
+            margin: 50px auto 0;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            border-radius: 15px;
+            text-align: left;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .meer-info-inner {
+            padding: 30px 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .meer-info-content.expanded .meer-info-inner {
+            max-height: 2000px;
+        }
+
+        .meer-info-content h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .meer-info-content h4 {
+            color: #34495e;
+            margin-bottom: 10px;
+            margin-top: 25px;
+        }
+
+        .meer-info-content .section {
+            margin-bottom: 25px;
+        }
+
+        .contract-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .contract-item {
+            margin: 5px 0;
+        }
+
+        .voordelen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .voordeel-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .voordeel-card.besparen {
+            border-left-color: #3498db;
+        }
+
+        .voordeel-card.tijd {
+            border-left-color: #27ae60;
+        }
+
+        .voordeel-card.timing {
+            border-left-color: #e74c3c;
+        }
+
+        .voordeel-card.veilig {
+            border-left-color: #9b59b6;
+        }
+
+        .voordeel-card p {
+            margin: 0;
+            color: #333;
+        }
+
+        .meer-info-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .meer-info-footer p {
+            font-style: italic;
+            color: #666;
+            margin: 0;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -427,6 +550,24 @@
             
             .form-container, .content-container {
                 padding: 30px 20px;
+            }
+
+            .footer-nav a,
+            .footer-nav button {
+                margin: 0 8px;
+                font-size: 0.85rem;
+            }
+
+            .meer-info-content {
+                padding: 20px 15px;
+            }
+
+            .contract-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .voordelen-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
