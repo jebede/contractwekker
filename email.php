@@ -240,7 +240,7 @@ class EmailService {
             if ($command === "DATA") {
                 if (substr($response, 0, 3) == '354') {
                     // Send email headers and body
-                    $emailData = "Subject: {$subject}\r\n" . implode("\r\n", $headers) . "\r\n\r\n{$message}\r\n.";
+                    $emailData = "To: {$to}\r\nSubject: {$subject}\r\n" . implode("\r\n", $headers) . "\r\n\r\n{$message}\r\n.";
                     fwrite($socket, "$emailData\r\n");
                     $response = fgets($socket, 256);
                 }
