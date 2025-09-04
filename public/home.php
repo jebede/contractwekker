@@ -17,6 +17,22 @@ $header_subtitle = 'Vergeet nooit meer je contract op te zeggen of over te stapp
 include 'views/header.php';
 ?>
 
+<?php if (isset($_SESSION['errors']) && !empty($_SESSION['errors'])): ?>
+    <div class="alert alert-error">
+        <?php foreach ($_SESSION['errors'] as $error): ?>
+            <p><?php echo htmlspecialchars($error); ?></p>
+        <?php endforeach; ?>
+    </div>
+    <?php unset($_SESSION['errors']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['success']) && !empty($_SESSION['success'])): ?>
+    <div class="alert alert-success">
+        <p><?php echo htmlspecialchars($_SESSION['success']); ?></p>
+    </div>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
 <div class="form-container">
     <form id="contractForm" action="register" method="POST">
 

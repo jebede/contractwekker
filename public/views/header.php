@@ -65,6 +65,43 @@
             padding: 40px 30px;
         }
 
+        .alert {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            border-color: #fcc;
+            color: #c33;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            border-color: #cfc;
+            color: #3a3;
+        }
+
+        .alert p {
+            margin: 0;
+            padding: 5px 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .form-group {
             margin-bottom: 25px;
         }
