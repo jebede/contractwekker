@@ -111,7 +111,7 @@ class EmailService {
                     
                     <p style='font-size: 16px; margin: 20px 0;'>
                         Het is tijd om je contract te bekijken en eventueel over te stappen naar een betere deal. 
-                        Vergelijk de nieuwste opties en bespaar geld! 💰
+                        Vergelijk de nieuwste opties en bespaar (hopelijk) geld! 💰
                     </p>";
         }
         

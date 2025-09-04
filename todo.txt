@@ -3,3 +3,5 @@ Done
 
 Todo
 - Notes kolom aanmaken
+- Agenda item toevoegen
+- Kunnen beheren 

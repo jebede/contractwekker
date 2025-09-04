@@ -58,6 +58,7 @@ include 'views/header.php';
         <li><strong>Netcup</strong> - Hosting provider (voor het bewaren van gegevens)</li>
         <li><strong>Mailgun</strong> - E-mail service provider (voor het versturen van herinneringen)</li>
         <li><strong>Matomo</strong> - Privacy-vriendelijke analytics software (zelf gehost)</li>
+        <li><strong>Bunny.net</strong> - Hosting provider (voor het bewaren van gegevens)</li>
     </ul>
     <p>Contractwekker.nl blijft verantwoordelijk voor deze verwerkingen.</p>
     
