@@ -1,4 +1,12 @@
 <?php
+session_start();
+require_once '../config.php';
+
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = generateToken();
+}
+
 // Set page variables
 $page_title = 'Contractwekker - Tijdig contract opzeggen of overstappen';
 $meta_description = 'Stel eenvoudig herinneringen in voor je contracten en ontvang op tijd een seintje om op te zeggen. Gratis, veilig en zonder gedoe.';
@@ -60,6 +68,7 @@ include 'views/header.php';
         </div>
 
         <!-- Hidden inputs for form submission -->
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <input type="hidden" id="is_periodic" name="is_periodic" value="1">
         <input type="hidden" id="disable_early_reminder" name="disable_early_reminder" value="">
         <input type="hidden" id="early_reminder_days" name="early_reminder_days" value="60">

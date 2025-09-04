@@ -12,6 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Validate CSRF token
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || 
+    $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    $_SESSION['errors'] = ['Invalid security token. Please try again.'];
+    header('Location: /');
+    exit;
+}
+
 // Check honeypot
 if (isBot($_POST['website'] ?? '')) {
     header('Location: /');
