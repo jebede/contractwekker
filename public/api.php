@@ -9,6 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/RateLimiter.php';
+
+// Initialize rate limiter
+$rateLimiter = new RateLimiter(
+    dirname(__DIR__) . '/rate_limit_data',  // Storage directory
+    60,  // Default limit: 60 requests
+    60   // Default window: 60 seconds (1 minute)
+);
 
 try {
     $pdo = Config::getDatabaseConnection();
@@ -19,6 +27,29 @@ try {
 }
 
 $action = $_GET['action'] ?? '';
+
+// Apply rate limiting based on endpoint
+$rateLimits = [
+    'get_products' => ['limit' => 100, 'window' => 60],     // 100 requests per minute
+    'create_alert' => ['limit' => 10, 'window' => 60],      // 10 alerts per minute
+    'get_alerts' => ['limit' => 60, 'window' => 60],        // 60 requests per minute
+    'delete_alert' => ['limit' => 20, 'window' => 60],      // 20 deletes per minute
+    'add_push_token' => ['limit' => 20, 'window' => 60],    // 20 updates per minute
+    'check_version' => ['limit' => 100, 'window' => 60],    // 100 checks per minute
+];
+
+// Apply rate limit for the current action
+if (isset($rateLimits[$action])) {
+    $limit = $rateLimits[$action]['limit'];
+    $window = $rateLimits[$action]['window'];
+} else {
+    // Default rate limit for unknown actions
+    $limit = 30;
+    $window = 60;
+}
+
+// Check rate limit (will automatically send 429 response if limit exceeded)
+$rateLimiter->limit(null, 'api_' . $action, $limit, $window);
 
 switch($action) {
     case 'get_products':

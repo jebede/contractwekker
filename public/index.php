@@ -4,6 +4,16 @@
  * Herd uses index.php as entry point, Apache can use either index.php or routes.php
  */
 
+// Load rate limiter
+require_once dirname(__DIR__) . '/RateLimiter.php';
+
+// Initialize rate limiter for general page requests
+$rateLimiter = new RateLimiter(
+    dirname(__DIR__) . '/rate_limit_data',
+    120,  // Default limit: 120 requests
+    60    // Default window: 60 seconds (1 minute)
+);
+
 // Get the requested path
 $request_uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($request_uri, PHP_URL_PATH);
@@ -34,6 +44,27 @@ if (preg_match('/\.php$/', $path) && !in_array($path, ['api.php', 'get_products.
 
 // Check if the route exists
 if (array_key_exists($path, $routes)) {
+    // Apply different rate limits based on the page
+    $pageLimits = [
+        'register' => ['limit' => 5, 'window' => 300],      // 5 submissions per 5 minutes  
+        'unsubscribe' => ['limit' => 10, 'window' => 300],  // 10 requests per 5 minutes
+        'get_products' => ['limit' => 100, 'window' => 60], // 100 requests per minute
+        'deploy-script222' => ['limit' => 1, 'window' => 3600], // 1 request per hour
+    ];
+    
+    // Apply rate limit for the current page
+    if (isset($pageLimits[$path])) {
+        $limit = $pageLimits[$path]['limit'];
+        $window = $pageLimits[$path]['window'];
+    } else {
+        // Default rate limit for general pages
+        $limit = 120;
+        $window = 60;
+    }
+    
+    // Check rate limit (will automatically send 429 response if limit exceeded)
+    $rateLimiter->limit(null, 'page_' . $path, $limit, $window);
+    
     // Include the corresponding PHP file
     $file = __DIR__ . '/' . $routes[$path];
     

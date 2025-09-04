@@ -2,7 +2,6 @@
 session_start();
 require_once '../config.php';
 
-
 // CSRF protection
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = generateToken();
