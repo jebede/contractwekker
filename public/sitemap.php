@@ -12,9 +12,6 @@ header('Content-Type: application/xml; charset=utf-8');
 // Base URL
 $base_url = 'https://contractwekker.nl';
 
-// Get current date/time in W3C format
-$lastmod = date('Y-m-d\TH:i:s+00:00');
-
 try {
     $pdo = Config::getDatabaseConnection();
     
@@ -71,7 +68,6 @@ $static_pages = [
 foreach ($static_pages as $page) {
     echo "  <url>\n";
     echo "    <loc>" . htmlspecialchars($page['loc'], ENT_XML1, 'UTF-8') . "</loc>\n";
-    echo "    <lastmod>" . $lastmod . "</lastmod>\n";
     echo "    <changefreq>" . $page['changefreq'] . "</changefreq>\n";
     echo "    <priority>" . $page['priority'] . "</priority>\n";
     echo "  </url>\n";
