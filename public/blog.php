@@ -17,7 +17,8 @@ try {
             SELECT id, title, slug, excerpt, content, header_image, header_image_mime, 
                    published_at, created_at, updated_at
             FROM blogs 
-            WHERE slug = ? AND published = 1 AND published_at IS NOT NULL
+            WHERE slug = ? AND published = 1 
+            AND (published_at IS NULL OR published_at <= NOW())
         ");
         $stmt->execute([$slug]);
         $post = $stmt->fetch();
@@ -68,7 +69,8 @@ try {
             SELECT id, title, slug, excerpt, content, header_image, header_image_mime, 
                    published_at, created_at
             FROM blogs 
-            WHERE published = 1 AND published_at IS NOT NULL
+            WHERE published = 1 
+            AND (published_at IS NULL OR published_at <= NOW())
             ORDER BY published_at DESC, created_at DESC
         ");
         $stmt->execute();
