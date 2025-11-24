@@ -424,7 +424,7 @@ include 'views/header.php';
         <!-- CTA Box -->
         <div class="blog-cta">
             <h3>⏰ Vergeet nooit meer je contract op te zeggen</h3>
-            <p>Stel eenvoudig een contractwekker in en ontvang op tijd een herinnering om je contract op te zeggen of over te stappen. Gratis, veilig en zonder gedoe.</p>
+            <p>Stel eenvoudig een contractwekker in en ontvang op tijd een herinnering om je contract op te zeggen of over te stappen. Gratis, snel en zonder gedoe.</p>
             <a href="/" class="cta-button">🔔 Contractwekker instellen</a>
         </div>
 
