@@ -77,19 +77,8 @@ foreach ($static_pages as $page) {
 foreach ($blog_posts as $post) {
     $post_url = $base_url . '/blog/' . htmlspecialchars($post['slug'], ENT_XML1, 'UTF-8');
     
-    // Determine lastmod date (use updated_at, published_at, or created_at)
-    $post_lastmod = $lastmod;
-    if ($post['updated_at']) {
-        $post_lastmod = date('Y-m-d\TH:i:s+00:00', strtotime($post['updated_at']));
-    } elseif ($post['published_at']) {
-        $post_lastmod = date('Y-m-d\TH:i:s+00:00', strtotime($post['published_at']));
-    } elseif ($post['created_at']) {
-        $post_lastmod = date('Y-m-d\TH:i:s+00:00', strtotime($post['created_at']));
-    }
-    
     echo "  <url>\n";
     echo "    <loc>" . $post_url . "</loc>\n";
-    echo "    <lastmod>" . $post_lastmod . "</lastmod>\n";
     echo "    <changefreq>weekly</changefreq>\n";
     echo "    <priority>0.8</priority>\n";
     echo "  </url>\n";
