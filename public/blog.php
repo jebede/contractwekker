@@ -417,6 +417,7 @@ include 'views/header.php';
         </div>
 
         <div class="blog-content">
+            <?php echo $post['excerpt']; ?>
             <?php echo $post['content']; ?>
         </div>
 
