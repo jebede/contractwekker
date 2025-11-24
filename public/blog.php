@@ -63,6 +63,58 @@ try {
             }
         }
         
+        // Get previous and next posts (only published and published_at <= NOW())
+        $previous_post = null;
+        $next_post = null;
+        $current_published_at = $post['published_at'] ?? $post['created_at'];
+        $current_created_at = $post['created_at'];
+        
+        // Get previous post (older post) - posts published before this one
+        $prev_stmt = $pdo->prepare("
+            SELECT id, title, slug, excerpt, header_image, header_image_mime, published_at, created_at
+            FROM blogs 
+            WHERE published = 1 
+            AND (published_at IS NULL OR published_at <= NOW())
+            AND id != ?
+            AND (
+                (published_at IS NOT NULL AND published_at < ?) 
+                OR (published_at IS NULL AND created_at < ?)
+                OR (published_at IS NOT NULL AND published_at = ? AND created_at < ?)
+            )
+            ORDER BY COALESCE(published_at, created_at) DESC, created_at DESC
+            LIMIT 1
+        ");
+        $prev_stmt->execute([$post['id'], $current_published_at, $current_created_at, $current_published_at, $current_created_at]);
+        $previous_post = $prev_stmt->fetch();
+        
+        // Get next post (newer post) - posts published after this one
+        $next_stmt = $pdo->prepare("
+            SELECT id, title, slug, excerpt, header_image, header_image_mime, published_at, created_at
+            FROM blogs 
+            WHERE published = 1 
+            AND (published_at IS NULL OR published_at <= NOW())
+            AND id != ?
+            AND (
+                (published_at IS NOT NULL AND published_at > ?) 
+                OR (published_at IS NULL AND created_at > ?)
+                OR (published_at IS NOT NULL AND published_at = ? AND created_at > ?)
+            )
+            ORDER BY COALESCE(published_at, created_at) ASC, created_at ASC
+            LIMIT 1
+        ");
+        $next_stmt->execute([$post['id'], $current_published_at, $current_created_at, $current_published_at, $current_created_at]);
+        $next_post = $next_stmt->fetch();
+        
+        // Replace {YEAR} in adjacent posts
+        if ($previous_post) {
+            $previous_post['title'] = str_replace('{YEAR}', $current_year, $previous_post['title']);
+            $previous_post['excerpt'] = $previous_post['excerpt'] ? str_replace('{YEAR}', $current_year, $previous_post['excerpt']) : null;
+        }
+        if ($next_post) {
+            $next_post['title'] = str_replace('{YEAR}', $current_year, $next_post['title']);
+            $next_post['excerpt'] = $next_post['excerpt'] ? str_replace('{YEAR}', $current_year, $next_post['excerpt']) : null;
+        }
+        
     } else {
         // Blog listing page
         $stmt = $pdo->prepare("
@@ -337,6 +389,83 @@ include 'views/header.php';
         box-shadow: 0 6px 20px rgba(234, 168, 102, 0.4);
     }
 
+    /* Blog Navigation */
+    .blog-navigation {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid #e1e5e9;
+    }
+
+    .blog-nav-item {
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.3s ease;
+    }
+
+    .blog-nav-item:hover {
+        transform: translateX(5px);
+    }
+
+    .blog-nav-item.prev:hover {
+        transform: translateX(-5px);
+    }
+
+    .blog-nav-item.prev {
+        text-align: left;
+    }
+
+    .blog-nav-item.next {
+        text-align: right;
+    }
+
+    .blog-nav-label {
+        font-size: 0.9rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .blog-nav-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .blog-nav-item:hover .blog-nav-title {
+        color: #4facfe;
+    }
+
+    .blog-nav-item.prev .blog-nav-label::before {
+        content: '← ';
+    }
+
+    .blog-nav-item.next .blog-nav-label::after {
+        content: ' →';
+    }
+
+    @media (max-width: 768px) {
+        .blog-navigation {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .blog-nav-item.prev,
+        .blog-nav-item.next {
+            text-align: left;
+        }
+
+        .blog-nav-item.next {
+            order: -1;
+        }
+    }
+
     /* Empty state */
     .blog-empty {
         text-align: center;
@@ -429,6 +558,27 @@ include 'views/header.php';
             <p>Stel eenvoudig een contractwekker in en ontvang op tijd een herinnering om je contract op te zeggen of over te stappen. Gratis, snel en zonder gedoe.</p>
             <a href="/" class="cta-button">🔔 Contractwekker instellen</a>
         </div>
+
+        <!-- Previous/Next Navigation -->
+        <?php if ($previous_post || $next_post): ?>
+        <div class="blog-navigation">
+            <?php if ($previous_post): ?>
+                <a href="/blog/<?php echo htmlspecialchars($previous_post['slug']); ?>" class="blog-nav-item prev">
+                    <div class="blog-nav-label">Vorige post</div>
+                    <div class="blog-nav-title"><?php echo htmlspecialchars($previous_post['title']); ?></div>
+                </a>
+            <?php else: ?>
+                <div></div>
+            <?php endif; ?>
+            
+            <?php if ($next_post): ?>
+                <a href="/blog/<?php echo htmlspecialchars($next_post['slug']); ?>" class="blog-nav-item next">
+                    <div class="blog-nav-label">Volgende post</div>
+                    <div class="blog-nav-title"><?php echo htmlspecialchars($next_post['title']); ?></div>
+                </a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
     <?php elseif (!$slug): ?>
         <!-- Blog listing -->
