@@ -7,3 +7,4 @@ env.php
 /expo-app/web-build
 /expo-app/dist
 /expo-app/web-build
+/rate-limit-data/
