@@ -462,7 +462,7 @@ include 'views/header.php';
                         <h2><a href="/blog/<?php echo htmlspecialchars($post['slug']); ?>"><?php echo htmlspecialchars($post['title']); ?></a></h2>
                         
                         <?php if ($post['excerpt']): ?>
-                            <div class="excerpt"><?php echo nl2br(htmlspecialchars($post['excerpt'])); ?></div>
+                            <div class="excerpt"><?php echo $post['excerpt'] ?></div>
                         <?php endif; ?>
                         
                         <?php if ($post['published_at']): ?>
