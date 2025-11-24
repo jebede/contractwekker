@@ -43,6 +43,18 @@ if (preg_match('/\.php$/', $path) && !in_array($path, ['api.php', 'get_products.
     exit;
 }
 
+// Handle sitemap.xml
+if ($path === 'sitemap.xml') {
+    $file = __DIR__ . '/sitemap.php';
+    if (file_exists($file)) {
+        include $file;
+    } else {
+        http_response_code(404);
+        echo "404 - Sitemap not found";
+    }
+    exit;
+}
+
 // Check for blog post slugs (e.g., /blog/post-slug)
 if (preg_match('/^blog\/(.+)$/', $path, $matches)) {
     $blog_slug = $matches[1];
