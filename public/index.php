@@ -32,6 +32,7 @@ $routes = [
     'unsubscribe' => 'unsubscribe.php',
     'get_products' => 'get_products.php',
     'deploy-script222' => 'deploy-script222.php',
+    'blog' => 'blog.php',
 ];
 
 // Check if we're accessing a .php file directly (except api.php and get_products.php)
@@ -39,6 +40,25 @@ if (preg_match('/\.php$/', $path) && !in_array($path, ['api.php', 'get_products.
     // Redirect to clean URL
     $clean_url = preg_replace('/\.php$/', '', $path);
     header("Location: /$clean_url", true, 301);
+    exit;
+}
+
+// Check for blog post slugs (e.g., /blog/post-slug)
+if (preg_match('/^blog\/(.+)$/', $path, $matches)) {
+    $blog_slug = $matches[1];
+    // Apply rate limit for blog pages
+    $rateLimiter->limit(null, 'page_blog', 120, 60);
+    
+    // Include blog.php and pass the slug
+    $file = __DIR__ . '/blog.php';
+    if (file_exists($file)) {
+        $_GET['slug'] = $blog_slug;
+        http_response_code(200);
+        include $file;
+    } else {
+        http_response_code(404);
+        echo "404 - Page not found";
+    }
     exit;
 }
 

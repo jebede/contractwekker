@@ -615,5 +615,15 @@
     <div class="container">
         <div class="header">
             <h1><a href="https://www.contractwekker.nl">⏰ Contractwekker</a></h1>
-            <p><?php echo isset($header_subtitle) ? htmlspecialchars($header_subtitle) : 'Vergeet nooit meer je contract op te zeggen of over te stappen'; ?></p>
+            <p><?php 
+                if (isset($header_subtitle)) {
+                    if (isset($header_subtitle_link) && $header_subtitle_link) {
+                        echo '<a href="' . htmlspecialchars($header_subtitle_link) . '" style="color: white; text-decoration: none;">' . htmlspecialchars($header_subtitle) . '</a>';
+                    } else {
+                        echo htmlspecialchars($header_subtitle);
+                    }
+                } else {
+                    echo 'Vergeet nooit meer je contract op te zeggen of over te stappen';
+                }
+            ?></p>
         </div>

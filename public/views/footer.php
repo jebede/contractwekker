@@ -3,12 +3,14 @@
     <!-- Footer navigation -->
     <div class="footer-nav">
         <a href="/">Home</a>
+        <a href="/blog">Blog</a>
         <a href="/faq">FAQ</a>
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
     </div>
     
     <!-- Meer informatie blokje -->
+    <?php if (!isset($hide_meer_info) || !$hide_meer_info): ?>
     <div id="meerInfoContent" class="meer-info-content expanded">
         <div class="meer-info-inner">
             <h3>Over Contractwekker</h3>
@@ -61,6 +63,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
     
     
 </body>
