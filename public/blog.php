@@ -42,7 +42,7 @@ try {
         
         // Set page variables for individual post
         $page_title = htmlspecialchars($post['title']) . ' - Contractwekker Blog';
-        $meta_description = htmlspecialchars($post['excerpt'] ?? substr(strip_tags($post['content']), 0, 160));
+        $meta_description = htmlspecialchars(strip_tage($post['excerpt']) ?? substr(strip_tags($post['content']), 0, 160));
         $canonical_url = 'https://contractwekker.nl/blog/' . htmlspecialchars($post['slug']);
         $header_subtitle = 'Blog';
         $header_subtitle_link = '/blog'; // Make "Blog" clickable to go back to index
