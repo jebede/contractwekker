@@ -55,6 +55,18 @@ if ($path === 'sitemap.xml') {
     exit;
 }
 
+// Handle rss.xml
+if ($path === 'rss.xml') {
+    $file = __DIR__ . '/rss.php';
+    if (file_exists($file)) {
+        include $file;
+    } else {
+        http_response_code(404);
+        echo "404 - RSS feed not found";
+    }
+    exit;
+}
+
 // Check for blog post slugs (e.g., /blog/post-slug)
 if (preg_match('/^blog\/(.+)$/', $path, $matches)) {
     $blog_slug = $matches[1];
