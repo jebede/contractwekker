@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { WebView } from 'react-native-webview';
 import { XMLParser } from 'fast-xml-parser';
+import { Image } from 'expo-image';
 
 interface BlogPost {
   title: string;
@@ -23,6 +24,7 @@ interface BlogPost {
   description?: string;
   pubDate?: string;
   content?: string; // Full HTML content
+  imageUrl?: string; // Image URL (can be base64/data URI)
 }
 
 export default function BlogsScreen() {
@@ -45,37 +47,69 @@ export default function BlogsScreen() {
         ignoreAttributes: false,
         attributeNamePrefix: '@_',
         textNodeName: '#text',
-        parseAttributeValue: false,
-        parseTagValue: true,
         trimValues: true,
-        ignoreNameSpace: false,
-        parseTrueNumberOnly: false,
-        arrayMode: false,
+        removeNSPrefix: true, // Remove namespace prefixes to simplify access
       });
       const result = parser.parse(xmlText);
       
-      // Extract items from RSS feed
-      const items = result.rss?.channel?.item || [];
+      // Extract items from RSS feed - try different possible paths
+      const channel = result.rss?.channel || result.rss?.channel?.[0];
+      const items = channel?.item || [];
       
-      // Ensure items is an array
-      const itemsArray = Array.isArray(items) ? items : [items].filter(Boolean);
+      // Ensure items is an array (XML parser might return single object or array)
+      const itemsArray = Array.isArray(items) ? items : (items ? [items] : []);
       
       const blogPosts: BlogPost[] = itemsArray.map((item: any) => {
         // Extract title, link, description, pubDate, and full content
-        // fast-xml-parser returns values directly, not in arrays
-        const title = item.title || '';
-        const link = item.link || '';
-        const description = item.description || '';
-        const pubDate = item.pubDate || '';
+        // Handle both direct values and nested text nodes (#text property)
+        const title = typeof item.title === 'string' ? item.title : (item.title?.['#text'] || item.title || '');
+        const link = typeof item.link === 'string' ? item.link : (item.link?.['#text'] || item.link || '');
+        const description = typeof item.description === 'string' ? item.description : (item.description?.['#text'] || item.description || '');
+        const pubDate = typeof item.pubDate === 'string' ? item.pubDate : (item.pubDate?.['#text'] || item.pubDate || '');
         
         // Extract full HTML content from content:encoded
-        // Try different possible field names (namespace handling varies)
-        const fullContent = 
-          item['content:encoded'] || 
-          item['content:encoded']?.['#text'] ||
-          item.content?.encoded ||
-          item.content ||
-          '';
+        // With removeNSPrefix: true, content:encoded becomes 'encoded'
+        const encodedContent = item.encoded || item['content:encoded'];
+        const fullContent = typeof encodedContent === 'string' 
+          ? encodedContent 
+          : (encodedContent?.['#text'] || encodedContent || '');
+        
+        // Extract image URL from media:content
+        // With removeNSPrefix: true, media:content becomes 'content'
+        // Try different possible structures
+        let imageUrl = '';
+        
+        // Try to get media content (could be nested in different ways)
+        const mediaContent = item.content || item.media?.content || item['media:content'];
+        
+        if (mediaContent) {
+          // Handle array or single object
+          const contentArray = Array.isArray(mediaContent) ? mediaContent : [mediaContent];
+          
+          // Find image content (medium="image" or type starts with "image/")
+          const imageContent = contentArray.find((c: any) => {
+            const medium = c['@_medium'] || c.medium;
+            const type = c['@_type'] || c.type;
+            return medium === 'image' || (type && type.startsWith('image/'));
+          });
+          
+          if (imageContent) {
+            imageUrl = imageContent['@_url'] || imageContent.url || imageContent['@_src'] || imageContent.src || '';
+          } else if (contentArray.length > 0) {
+            // Fallback: use first content item if it has a URL
+            const firstContent = contentArray[0];
+            imageUrl = firstContent['@_url'] || firstContent.url || firstContent['@_src'] || firstContent.src || '';
+          }
+        }
+        
+        // Also check for enclosure tag (alternative image source)
+        if (!imageUrl && item.enclosure) {
+          const enclosure = Array.isArray(item.enclosure) ? item.enclosure[0] : item.enclosure;
+          const enclosureType = enclosure['@_type'] || enclosure.type || '';
+          if (enclosureType.startsWith('image/')) {
+            imageUrl = enclosure['@_url'] || enclosure.url || '';
+          }
+        }
         
         // Clean up HTML tags from description for excerpt
         const cleanDescription = description
@@ -95,6 +129,7 @@ export default function BlogsScreen() {
           contentSnippet: cleanDescription,
           pubDate: String(pubDate).trim(),
           content: String(fullContent).trim(),
+          imageUrl: imageUrl ? String(imageUrl).trim() : undefined,
         };
       });
       
@@ -197,6 +232,15 @@ export default function BlogsScreen() {
                   onPress={() => handlePostPress(post)}
                   activeOpacity={0.7}
                 >
+                  {post.imageUrl && (
+                    <Image
+                      source={{ uri: post.imageUrl }}
+                      style={styles.postImage}
+                      contentFit="cover"
+                      transition={200}
+                      placeholder={{ blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.' }}
+                    />
+                  )}
                   <ThemedText style={styles.postTitle}>
                     {post.title}
                   </ThemedText>
@@ -389,6 +433,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#f0f0f0',
   },
   postTitle: {
     fontSize: 18,
