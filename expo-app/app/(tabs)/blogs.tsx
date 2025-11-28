@@ -7,11 +7,13 @@ import {
   RefreshControl,
   SafeAreaView,
   Alert,
+  Modal,
+  View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import * as WebBrowser from 'expo-web-browser';
+import { WebView } from 'react-native-webview';
 import { XMLParser } from 'fast-xml-parser';
 
 interface BlogPost {
@@ -20,16 +22,19 @@ interface BlogPost {
   contentSnippet?: string;
   description?: string;
   pubDate?: string;
+  content?: string; // Full HTML content
 }
 
 export default function BlogsScreen() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [webViewLoading, setWebViewLoading] = useState(false);
 
   const fetchBlogs = useCallback(async () => {
     try {
-      const rssUrl = 'https://contractwekker.nl/rss.php';
+      const rssUrl = 'https://contractwekker.nl/rss.xml';
       
       // Fetch RSS feed as text
       const response = await fetch(rssUrl);

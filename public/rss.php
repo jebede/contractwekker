@@ -113,7 +113,13 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $full_content .= '<p><img src="' . htmlspecialchars($image_url, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') . '" style="max-width: 100%; height: auto;" /></p>';
     }
     
-    if ($post['excerpt']) {
+    // Include full HTML content
+    if ($post['content']) {
+        // Replace {YEAR} with current year in content
+        $content = str_replace('{YEAR}', $current_year, $post['content']);
+        $full_content .= $content;
+    } elseif ($post['excerpt']) {
+        // Fallback to excerpt if content is not available
         $full_content .= $post['excerpt'];
     }
     
@@ -167,3 +173,5 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
 </channel>
 </rss>
+
+
